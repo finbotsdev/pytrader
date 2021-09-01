@@ -4,4 +4,4 @@ deps:
 	pip install -r requirements.txt
 
 dev:
-	export FLASK_APP=app; flask run
+	@export FLASK_APP=app; flask run
