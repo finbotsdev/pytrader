@@ -56,3 +56,6 @@ cover/
 
 # ignore .vars file
 .vars
+
+# ignore sqlite db
+*.db*
