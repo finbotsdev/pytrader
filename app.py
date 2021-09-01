@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import os
 from werkzeug.utils import import_string
@@ -7,6 +8,7 @@ app = Flask(__name__)
 app.config.from_object(import_string(os.environ.get('FLASK_CFG'))())
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
