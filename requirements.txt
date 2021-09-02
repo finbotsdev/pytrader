@@ -1,4 +1,5 @@
 alembic
+alpaca_trade_api
 flask
 flask_sqlalchemy
 flask_migrate

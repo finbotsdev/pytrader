@@ -59,3 +59,6 @@ cover/
 
 # ignore sqlite db
 *.db*
+
+# ignore data cache
+.data
