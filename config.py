@@ -6,12 +6,12 @@ class Config(object):
    SQLALCHEMY_TRACK_MODIFICATIONS=False
 
 class ProductionConfig(Config):
-    pass
+   SQLALCHEMY_DATABASE_URI = f"{os.environ.get('SQLALCHEMY_DATABASE_URI')}"
 
 class DevelopmentConfig(Config):
    DEBUG=True
-   SQLALCHEMY_DATABASE_URI = 'sqlite:///app.db'
+   SQLALCHEMY_DATABASE_URI = f"{os.environ.get('SQLALCHEMY_DATABASE_URI')}-dev"
 
 class TestingConfig(Config):
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+   TESTING = True
+   SQLALCHEMY_DATABASE_URI = f"{os.environ.get('SQLALCHEMY_DATABASE_URI')}-test"

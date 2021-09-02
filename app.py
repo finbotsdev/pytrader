@@ -1,23 +1,19 @@
-from flask import Flask
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, g
+import model
 import os
 from werkzeug.utils import import_string
 
-app = Flask(__name__)
-app.config.from_object(import_string(os.environ.get('FLASK_CFG'))())
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(import_string(os.environ.get('FLASK_CFG'))())
+    app.app_context().push()
+    model.init_app(app)
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+    @app.route("/")
+    def hello_world():
+        return "<p>Hello, World!</p>"
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    return app
 
-    def __repr__(self):
-        return '<User %r>' % self.username
-
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
+if __name__ == "app":
+    app = create_app()

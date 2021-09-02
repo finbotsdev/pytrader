@@ -3,3 +3,4 @@ flask
 flask_sqlalchemy
 flask_migrate
 sqlalchemy
+psycopg2-binary
