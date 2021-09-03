@@ -1,5 +1,6 @@
 alembic
 alpaca_trade_api
+ccxt
 flask
 flask_sqlalchemy
 flask_migrate
@@ -7,4 +8,5 @@ parsedatetime
 psaw
 psycopg2-binary
 requests
+schedule
 sqlalchemy
