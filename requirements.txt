@@ -3,6 +3,7 @@ alpaca_trade_api
 flask
 flask_sqlalchemy
 flask_migrate
+parsedatetime
 psaw
 psycopg2-binary
 requests
