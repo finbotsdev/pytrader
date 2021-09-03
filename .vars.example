@@ -2,7 +2,7 @@
 
 # alpaca trading vars
 export APCA_API_BASE_URL=https://paper-api.alpaca.markets
-export APCA_API_DATA_URL=https://data.alpaca.markets	
+export APCA_API_DATA_URL=https://data.alpaca.markets
 export APCA_API_KEY_ID=xxxxxxxxxxxxxxxxx
 export APCA_API_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 export APCA_API_VERSION=v2
@@ -23,3 +23,8 @@ export FLASK_CFG=config.DevelopmentConfig
 export SQLALCHEMY_DATABASE_URI="postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}"
 export SQLALCHEMY_TRACK_MODIFICATIONS=False
 
+# IEX api
+export IEX_API_KEY_ID=Tpk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export IEX_API_SECRET_KEY=Tsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export IEX_API_DATA_URL=https://sandbox.iexapis.com
+export IEX_API_VERSION=v1

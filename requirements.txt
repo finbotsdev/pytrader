@@ -5,4 +5,5 @@ flask_sqlalchemy
 flask_migrate
 psaw
 psycopg2-binary
+requests
 sqlalchemy
