@@ -1,8 +1,8 @@
 """add stocks table
 
-Revision ID: d3f6ddb65e6a
-Revises: 
-Create Date: 2021-09-01 19:38:03.481883
+Revision ID: 836a00fce591
+Revises: 817c4542555f
+Create Date: 2021-09-02 19:51:25.597052
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd3f6ddb65e6a'
-down_revision = None
+revision = '836a00fce591'
+down_revision = '817c4542555f'
 branch_labels = None
 depends_on = None
 

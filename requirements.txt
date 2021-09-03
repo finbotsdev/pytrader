@@ -3,5 +3,6 @@ alpaca_trade_api
 flask
 flask_sqlalchemy
 flask_migrate
-sqlalchemy
+psaw
 psycopg2-binary
+sqlalchemy

@@ -1,8 +1,8 @@
 """add etfs holdings table
 
-Revision ID: 9cd20be660a2
-Revises: 7e4944114bf0
-Create Date: 2021-09-01 20:07:54.916735
+Revision ID: 75011845e312
+Revises: 9de48dfba2fc
+Create Date: 2021-09-02 19:52:23.561410
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '9cd20be660a2'
-down_revision = '7e4944114bf0'
+revision = '75011845e312'
+down_revision = '9de48dfba2fc'
 branch_labels = None
 depends_on = None
 
