@@ -61,6 +61,7 @@ def check_buy_sell_signal(df):
   if not isinstance(previous_bars, pd.DataFrame):
     print(f"starting in_uptrend: {str(df['in_uptrend'][last])}")
     return # first iteration
+
   else:
     lastlast = len(previous_bars.index) - 1
     if df['timestamp'][last] == previous_bars['timestamp'][lastlast]:
