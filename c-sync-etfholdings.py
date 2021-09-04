@@ -4,8 +4,9 @@ from datetime import date
 import os
 import psycopg2 as pg
 import psycopg2.extras as pgx
+import pytrader as pt
+import pytrader.log as log
 import requests
-# import urllib.request
 
 """
 c-sync-etfholdings.py
@@ -15,6 +16,10 @@ maintain a local db of etf holdings so that we can observe changes over time
 
 """
 
+timer = pt.Timer()
+
+logger = log.logging
+log.config_root_logger()
 
 connection = pg.connect(dsn=cfg.DSN, cursor_factory=pgx.DictCursor)
 cursor = connection.cursor()
@@ -28,7 +33,7 @@ feeds = {
     "ARKG": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_GENOMIC_REVOLUTION_MULTISECTOR_ETF_ARKG_HOLDINGS.csv",
     "ARKF": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_FINTECH_INNOVATION_ETF_ARKF_HOLDINGS.csv",
     "ARKX": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_SPACE_EXPLORATION_&_INNOVATION_ETF_ARKX_HOLDINGS.csv",
-} 
+}
 
 # Real comments are more complicated ...
 def is_comment(line):
@@ -52,26 +57,26 @@ def read_and_filter_csv(csv_path, *filters):
         return [row for row in reader]
 
 cursor.execute("""
-    UPDATE stocks SET is_etf = TRUE WHERE symbol IN ('ARKF', 'ARKG', 'ARKK', 'ARKQ', 'ARKX', 'IRZL', 'PRNT')
+    UPDATE asset SET is_etf = TRUE WHERE symbol IN ('ARKF', 'ARKG', 'ARKK', 'ARKQ', 'ARKX', 'IRZL', 'PRNT')
 """)
 connection.commit()
 
-cursor.execute("SELECT * FROM stocks WHERE is_etf = TRUE")
+cursor.execute("SELECT * FROM asset WHERE is_etf = TRUE")
 etfs = cursor.fetchall()
 
 for etf in etfs:
-    print(f"Download Holdings Report for {etf['company']} ({etf['symbol']})")
+    logger.info(f"Download Holdings Report for {etf['company']} ({etf['symbol']})")
 
     # create directory to store download files
     dirname = os.path.dirname(__file__)
     filepath = os.path.join(dirname, '.data', 'holdings', today.strftime('%Y-%m-%d'))
     os.path.dirname(__file__)
-    os.makedirs(filepath, exist_ok=True) 
+    os.makedirs(filepath, exist_ok=True)
 
     # download updated csv file for fund
     if etf['symbol'] in feeds.keys():
         url = feeds[etf['symbol']]
-        print(f"    {url}")
+        logger.info(f"    {url}")
 
         hfile = f"{filepath}/ETF_{etf['symbol']}_HOLDINGS.csv"
 
@@ -82,25 +87,27 @@ for etf in etfs:
         with requests.get(url, headers=headers, stream=True) as r:
             r.raise_for_status()
             with open(hfile, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192): 
+                for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
-    
+
         try:
             for l in read_and_filter_csv(hfile, is_comment, is_whitespace):
                 if l['date'] and l['ticker'] and l['shares'] and l['weight(%)']:
                     cursor.execute("""
-                        SELECT * FROM stocks WHERE symbol = %s
+                        SELECT * FROM asset WHERE symbol = %s
                     """, (l['ticker'],))
                     holding = cursor.fetchone()
                     if holding:
-                        print(f"    {etf['symbol']} holds {l['shares']} shares of {holding['symbol']} which is {l['weight(%)']}% of their holdings")
+                        logger.info(f"    {etf['symbol']} holds {l['shares']} shares of {holding['symbol']} which is {l['weight(%)']}% of their holdings")
                         cursor.execute("""
                             INSERT INTO etfs_holdings ( etf_id, holding_id, dt, shares, weight )
                             VALUES (%s, %s, %s, %s, %s)
                         """, (etf[0], holding[0], l['date'], l['shares'], l['weight(%)']))
             connection.commit()
         except Exception as e:
-            print(e)
+            logger.error(e)
 
     else:
-        print(f"{etf['symbol']} does not exist in feeds dict")
+        logger.info(f"{etf['symbol']} does not exist in feeds dict")
+
+timer.report()

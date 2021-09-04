@@ -11,6 +11,9 @@ export APCA_RETRY_WAIT=3
 export APCA_RETRY_CODES=429,504
 export DATA_PROXY_WS
 
+export COINBASE_API_KEY_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export COINBASE_API_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
 ## postgres vars
 export DB_HOST='localhost'
 export DB_USER='pytrader'

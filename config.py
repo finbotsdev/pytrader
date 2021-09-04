@@ -1,10 +1,21 @@
+# encoding: utf-8
+
 import os
+from pathlib import Path
 
 DB_HOST=os.environ.get('DB_HOST')
 DB_USER=os.environ.get('DB_USER')
 DB_PASS=os.environ.get('DB_PASS')
 DB_NAME=os.environ.get('DB_NAME')
 DSN=f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}-dev"
+
+MAX_THREADS = 10 # max threads at a time
+
+################################################################ PATHS ->
+home = str(Path.home())
+
+FILES_PATH = home + '/pytrader_files/'
+LOGS_PATH = FILES_PATH + 'logs/'
 
 class Config(object):
    DEBUG=False

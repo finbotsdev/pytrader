@@ -3,6 +3,14 @@ from datetime import datetime, date, time
 from psaw import PushshiftAPI
 import psycopg2 as pg
 import psycopg2.extras as pgx
+import pytrader as pt
+from pytrader.data import AlpacaMarkets, date
+import pytrader.log as log
+
+timer = pt.Timer()
+
+logger = log.logging
+log.config_root_logger()
 
 connection = pg.connect(dsn=cfg.DSN, cursor_factory=pgx.DictCursor)
 cursor = connection.cursor()
@@ -11,6 +19,7 @@ api = PushshiftAPI()
 
 start_time = int(datetime.combine(date.today(), time()).timestamp())
 
+logger.info('search_submissions')
 submissions = api.search_submissions(after=start_time,
                                     subreddit='wallstreetbets',
                                     filter=['url','author', 'title', 'subreddit'],
@@ -28,20 +37,22 @@ for submission in submissions:
         for cashtag in cashtags: # iterate cashtags in submisstion title
             try:
                 cursor.execute("""
-                    SELECT * FROM stocks WHERE symbol = %s
+                    SELECT * FROM asset WHERE symbol = %s
                 """, (cashtag[1:],))
-                stock = cursor.fetchone()
-                if stock:
+                asset = cursor.fetchone()
+                if asset:
                     cursor.execute("""
-                        INSERT INTO mentions (stock_id, dt, message, source, url)
+                        INSERT INTO mention (asset_id, dt, message, source, url)
                         VALUES (%s, %s, %s, %s, %s)
-                    """, (stock['id'], datetime.fromtimestamp(submission.created_utc), submission.title, 'reddit', submission.url))
+                    """, (asset['id'], datetime.fromtimestamp(submission.created_utc), submission.title, 'reddit', submission.url))
                     connection.commit()
 
             except Exception as e:
               connection.rollback();
 
-cashtags = list(set(filter(lambda word: word.lower().startswith('$'), words)))
-print(f"\n Cashtags Mentioned")
-print(cashtags)
+logger.info('get cashtags from submissions')
 
+cashtags = list(set(filter(lambda word: word.lower().startswith('$'), words)))
+print(f"Cashtags Mentioned {cashtags}")
+
+timer.report()

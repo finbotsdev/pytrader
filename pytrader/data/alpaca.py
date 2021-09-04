@@ -4,7 +4,8 @@ import requests
 class AlpacaMarkets():
 
     def __init__(self):
-        self.URL = os.environ.get('APCA_API_BASE_URL')
+        self.BASE_URL = os.environ.get('APCA_API_BASE_URL')
+        self.DATA_URL = os.environ.get('APCA_API_DATA_URL')
         self.KEY_ID = os.environ.get('APCA_API_KEY_ID')
         self.SECRET_KEY = os.environ.get('APCA_API_SECRET_KEY')
         self.VERSION = os.environ.get('APCA_API_VERSION')
@@ -16,12 +17,11 @@ class AlpacaMarkets():
 
 
     def get(self, path, **kwargs):
-
         params=[]
         for key, value in kwargs.items():
           params.append(f"{key}={value}")
 
-        url = f"{self.URL}/{self.VERSION}/{path}"
+        url = f"{self.BASE_URL}/{self.VERSION}/{path}"
 
         if params:
           url = "?".join([url, "&".join(params)])
@@ -33,6 +33,23 @@ class AlpacaMarkets():
         else:
           print(r.status_code, r.reason, url)
 
+    def get_data(self, path, **kwargs):
+        params=[]
+        for key, value in kwargs.items():
+          if kwargs[key]:
+            params.append(f"{key}={value}")
+
+        url = f"{self.DATA_URL}/{self.VERSION}/{path}"
+
+        if params:
+          url = "?".join([url, "&".join(params)])
+
+        r = requests.get(url, headers=self.auth_header)
+
+        if r.ok:
+          return r.json()
+        else:
+          print(r.status_code, r.reason, url)
 
     # https://alpaca.markets/docs/api-documentation/api-v2/account/
     def get_account(self):
@@ -97,6 +114,17 @@ class AlpacaMarkets():
     # GET/v2/stocks/{symbol}/quotes
     # GET/v2/stocks/{symbol}/quotes/latest
     # GET/v2/stocks/{symbol}/bars
+    def get_bars(self, symbol, start, end, timeframe='1Min', limit=None, page_token=None, adjustment='raw'):
+      """
+      :param symbol: string - The symbol to query for
+      :param start: string (required) - Filter data equal to or after this time in RFC-3339 format. Fractions of a second are not accepted.
+      :param end: string (required) - Filter data equal to or before this time in RFC-3339 format. Fractions of a second are not accepted.
+      :param limit: int - Number of data points to return. Must be in range 1-10000, defaults to 1000.
+      :param page_token: string - Pagination token to continue from.
+      :param timeframe: string (required) - Timeframe for the aggregation. Values are customizeable, frequently used examples: 1Min, 15Min, 1Hour, 1Day.
+      :param adjustment: string - Specifies the corporate action adjustment for the stocks. Enum: ‘raw’, ‘split’, ‘dividend’ or ‘all’. Default value is ‘raw’.
+      """
+      return self.get_data(f"stocks/{symbol}/bars", start=start, end=end, timeframe=timeframe, limit=limit, page_token=page_token, adjustment=adjustment)
     # GET/v2/stocks/snapshots
     # GET/v2/stocks/{symbol}/snapshot
 
