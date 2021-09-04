@@ -19,14 +19,15 @@ depends_on = None
 def upgrade():
     op.create_table(
         'mention',
-        sa.Column('asset_id', sa.Integer, sa.ForeignKey('asset.id'), primary_key=True),
-        sa.Column('dt', sa.DateTime, nullable=False, primary_key=True),
-        sa.Column('message', sa.Text, nullable=False),
-        sa.Column('source', sa.Text, nullable=False), # -- wallstreetbets, twitter, stocktwits
-        sa.Column('url', sa.Text, nullable=False),
+        sa.Column('asset_id', sa.Integer, sa.ForeignKey('asset.id')),
+        sa.Column('dt', sa.DateTime, primary_key=True),
+        sa.Column('message', sa.Text),
+        sa.Column('source', sa.Text), # -- wallstreetbets, twitter, stocktwits
+        sa.Column('url', sa.Text),
     )
-    op.create_index('idx_mention', 'mention', [sa.text('asset_id, dt desc')])
     op.execute("SELECT create_hypertable('mention', 'dt')")
+
+    op.create_unique_constraint('uix_mentions', 'mention', columns=['asset_id','dt'])
 
 
 def downgrade():

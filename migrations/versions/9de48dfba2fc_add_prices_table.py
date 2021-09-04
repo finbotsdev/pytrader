@@ -19,18 +19,20 @@ depends_on = None
 def upgrade():
     op.create_table(
         'price',
-        sa.Column('asset_id', sa.Integer, sa.ForeignKey('asset.id'), nullable=False, primary_key=True),
-        sa.Column('dt', sa.DateTime, nullable=False, primary_key=True),
-        sa.Column('period', sa.Enum('minute', 'hour', 'day', name='PERIOD'), nullable=False, primary_key=True),
-        sa.Column('open', sa.Numeric, nullable=True),
-        sa.Column('high', sa.Numeric, nullable=True),
-        sa.Column('low', sa.Numeric, nullable=True),
-        sa.Column('close', sa.Numeric, nullable=True),
-        sa.Column('volume', sa.Numeric, nullable=True),
+        sa.Column('asset_id', sa.Integer, sa.ForeignKey('asset.id')),
+        sa.Column('dt', sa.DateTime, primary_key=True),
+        sa.Column('period', sa.Enum('minute', 'hour', 'day', name='PERIOD')),
+        sa.Column('open', sa.Numeric),
+        sa.Column('high', sa.Numeric),
+        sa.Column('low', sa.Numeric),
+        sa.Column('close', sa.Numeric),
+        sa.Column('volume', sa.Numeric),
     )
-    op.create_index('idx_prices', 'price', [sa.text('asset_id, period, dt desc')])
+    # op.create_index('idx_prices', 'price', [sa.text('asset_id, period, dt desc')])
+
     op.execute("SELECT create_hypertable('price', 'dt')")
 
+    op.create_unique_constraint('uix_prices', 'price', columns=['asset_id','dt', 'period'])
 
 def downgrade():
     op.drop_table('price')

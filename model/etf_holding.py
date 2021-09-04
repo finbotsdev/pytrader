@@ -1,13 +1,17 @@
-from flask_sqlalchemy import SQLAlchemy
+from model import Base
+from sqlalchemy import Column, DateTime, Integer, Numeric
+from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey, ForeignKeyConstraint
+from sqlalchemy.orm import relationship
 
-db = SQLAlchemy()
+class EtfHolding(Base):
+    __tablename__ = 'etf_holding'
 
-class EtfHolding(db.Model):
-    etf_id = db.Column(db.Integer, primary_key=True)
-    holding_id = db.Column(db.Integer, primary_key=True)
-    dt = db.Column(db.DateTime, nullable=False, primary_key=True)
-    shares = db.Column(db.Numeric, nullable=True)
-    weight = db.Column(db.Numeric, nullable=True)
+    etf_id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
+    holding_id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
+    dt = Column(DateTime, primary_key=True)
+    shares = Column(Numeric)
+    weight = Column(Numeric)
 
     def __repr__(self):
-        return f'<EtfHolding {self.eft_id}, {self.holding_id}, {self.dt}, {self.shares}, {self.weight}>'
+        return f'<EtfHolding (etf_id={self.eft_id}, holding_id={self.holding_id}, dt={self.dt}, shares={self.shares}, weight={self.weight})>'

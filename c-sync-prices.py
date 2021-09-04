@@ -38,3 +38,7 @@ for b in bars:
 conn.commit()
 
 timer.report()
+
+# 2021-09-04 09:52:25,352| MainThread | INFO | 12310 asset records exist in the database
+# 2021-09-04 09:52:39,813| MainThread | INFO | 1437744 price records exist in the database
+# 2021-09-04 09:52:39,813| MainThread | INFO | --- 9768.414362192154 seconds ---

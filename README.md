@@ -12,9 +12,12 @@
 
 ## 3rd party api supported
 
-[Alpaca Markets](https://alpaca.markets/) -- free tier
+[Alpaca Markets](https://alpaca.markets/)
+ -- free tier
 
-[IEX Cloud](https://iexcloud.io/) -- free tier
+[IEX Cloud](https://iexcloud.io/)
+ -- free tier
+
 Apart from the starting plan, which is suitable for testing, the next tiers come at the cost of $19, $59, and $699 monthly, depending on the number of allocated messages.
 
 ## postgres websockets
