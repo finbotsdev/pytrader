@@ -1,10 +1,20 @@
 import config as cfg
-import psycopg2 as pg
-import psycopg2.extras as pgx
-import pandas as pd
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, date
 import pytrader.log as log
+import sqlalchemy as sa
+from sqlalchemy import exc
+
+from model import Session
+from model.asset import Asset
+from model.price import Price
+
+"""
+c-sync-aqssets.py
+---------------------
+grab list of assets from data api and write to local database
+for each active tradeable asset get yesterdays minute data
+"""
 
 timer = pt.Timer()
 
@@ -12,33 +22,50 @@ logger = log.logging
 log.config_root_logger()
 
 api = AlpacaMarkets()
-conn = pg.connect(dsn=cfg.DSN, cursor_factory=pgx.DictCursor)
-cursor = conn.cursor()
+session = Session()
 
-symbol = 'AAPL'
-period = '1Min'
+try:
+  logger.info('get assets list from local db')
+  assets = api.get_assets()
+  assets = session.query(Asset).filter(
+    Asset.status == 'active',
+    Asset.is_tradeable == True).all()
 
-result = api.get_bars(symbol, end=date('yesterday'), start=date('yesterday'), timeframe=period)
-logger.info(result)
+  for asset in assets:
+    print()
+    print(asset)
 
-cursor.execute("""
-  SELECT * FROM asset WHERE symbol = %s AND status = 'active' AND is_tradeable = true
-""", (symbol,))
-asset = cursor.fetchone()
-logger.info(asset)
+    result = api.get_bars(asset.symbol, end=date('yesterday'), start=date('yesterday'), timeframe='1Min')
+    bars = result['bars']
+    if bars:
+      for b in bars:
+        try:
+          logger.info(f"create price for {asset.symbol} {b['t']} ")
+          price = Price(
+            asset_id=asset.id,
+            period='minute',
+            dt=b['t'],
+            open=b['o'],
+            high=b['h'],
+            low=b['l'],
+            close=b['c'],
+            volume=b['v']
+          )
+          session.add(price)
+          session.commit()
 
-bars = result['bars']
-for b in bars:
-  # logger.info(b)
-  cursor.execute("""
-      INSERT INTO prices (asset_id, dt, period, open, high, low, close, volume)
-      VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-  """, (asset['id'], b['t'], 'minute', b['o'], b['h'], b['l'], b['c'], b['v'],))
+        except Exception as e:
+          session.rollback()
+          logger.error(e)
+          print(e)
 
-conn.commit()
+  num_prices = session.query(Price).count()
+  logger.info(f"{num_prices} price records exist in the database")
+
+except Exception as e:
+  logger.error(e)
+  print('asset', asset)
+  print(e)
+  pass
 
 timer.report()
-
-# 2021-09-04 09:52:25,352| MainThread | INFO | 12310 asset records exist in the database
-# 2021-09-04 09:52:39,813| MainThread | INFO | 1437744 price records exist in the database
-# 2021-09-04 09:52:39,813| MainThread | INFO | --- 9768.414362192154 seconds ---

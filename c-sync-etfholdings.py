@@ -7,7 +7,12 @@ import psycopg2.extras as pgx
 import pytrader as pt
 import pytrader.log as log
 import requests
+import sqlalchemy as sa
+from sqlalchemy import exc
 
+from model import Session
+from model.asset import Asset
+from model.etf_holding import EtfHolding
 """
 c-sync-etfholdings.py
 ---------------------
@@ -21,8 +26,8 @@ timer = pt.Timer()
 logger = log.logging
 log.config_root_logger()
 
-connection = pg.connect(dsn=cfg.DSN, cursor_factory=pgx.DictCursor)
-cursor = connection.cursor()
+session = Session()
+
 today = date.today()
 
 # store a dictionary of feed urls keyed by ticker symbol
@@ -56,16 +61,14 @@ def read_and_filter_csv(csv_path, *filters):
         reader = csv.DictReader(iter_clean_lines, delimiter=',')
         return [row for row in reader]
 
-cursor.execute("""
-    UPDATE asset SET is_etf = TRUE WHERE symbol IN ('ARKF', 'ARKG', 'ARKK', 'ARKQ', 'ARKX', 'IRZL', 'PRNT')
-""")
-connection.commit()
+try:
+  known_etfs = ['ARKF', 'ARKG', 'ARKK', 'ARKQ', 'ARKX', 'IRZL', 'PRNT']
+  for asset in session.query(Asset).filter(Asset.symbol.in_(known_etfs)):
+    asset.is_etf = True
+  session.commit()
 
-cursor.execute("SELECT * FROM asset WHERE is_etf = TRUE")
-etfs = cursor.fetchall()
-
-for etf in etfs:
-    logger.info(f"Download Holdings Report for {etf['company']} ({etf['symbol']})")
+  for etf in session.query(Asset).filter(Asset.is_etf == True):
+    logger.info(f"Download Holdings Report for {etf.company} ({etf.symbol})")
 
     # create directory to store download files
     dirname = os.path.dirname(__file__)
@@ -74,40 +77,47 @@ for etf in etfs:
     os.makedirs(filepath, exist_ok=True)
 
     # download updated csv file for fund
-    if etf['symbol'] in feeds.keys():
-        url = feeds[etf['symbol']]
-        logger.info(f"    {url}")
+    if etf.symbol in feeds.keys():
+      url = feeds[etf.symbol]
+      logger.info(f"    {url}")
 
-        hfile = f"{filepath}/ETF_{etf['symbol']}_HOLDINGS.csv"
+      hfile = f"{filepath}/ETF_{etf.symbol}_HOLDINGS.csv"
 
-        headers = {
-            'User-Agent': 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
-        }
+      headers = {
+        'User-Agent': 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
+      }
 
-        with requests.get(url, headers=headers, stream=True) as r:
-            r.raise_for_status()
-            with open(hfile, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
+      with requests.get(url, headers=headers, stream=True) as r:
+        r.raise_for_status()
+        with open(hfile, 'wb') as f:
+          for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
 
-        try:
-            for l in read_and_filter_csv(hfile, is_comment, is_whitespace):
-                if l['date'] and l['ticker'] and l['shares'] and l['weight(%)']:
-                    cursor.execute("""
-                        SELECT * FROM asset WHERE symbol = %s
-                    """, (l['ticker'],))
-                    holding = cursor.fetchone()
-                    if holding:
-                        logger.info(f"    {etf['symbol']} holds {l['shares']} shares of {holding['symbol']} which is {l['weight(%)']}% of their holdings")
-                        cursor.execute("""
-                            INSERT INTO etfs_holdings ( etf_id, holding_id, dt, shares, weight )
-                            VALUES (%s, %s, %s, %s, %s)
-                        """, (etf[0], holding[0], l['date'], l['shares'], l['weight(%)']))
-            connection.commit()
-        except Exception as e:
-            logger.error(e)
+      try:
+        for l in read_and_filter_csv(hfile, is_comment, is_whitespace):
+          if l['date'] and l['ticker'] and l['shares'] and l['weight(%)']:
+            holding = session.query(Asset).filter(Asset.symbol == l['ticker']).first()
+            if holding:
+              logger.info(f"    {etf.symbol} holds {l['shares']} shares of {holding.symbol} which is {l['weight(%)']}% of their holdings")
+              eft_holding = EtfHolding(
+                etf_id=etf.id,
+                holding_id=holding.id,
+                dt=l['date'],
+                shares=l['shares'],
+                weight=l['weight(%)'],
+              )
+              session.add(eft_holding)
+        session.commit()
+      except Exception as e:
+        logger.error(e)
+        print(e)
 
     else:
-        logger.info(f"{etf['symbol']} does not exist in feeds dict")
+        logger.info(f"{etf.symbol} does not exist in feeds dict")
+
+except Exception as e:
+  logger.error(e)
+  print(e)
+  pass
 
 timer.report()
