@@ -1,9 +1,9 @@
 from flask import g
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from .etfs_holdings import EtfHoldings
-from .prices import Price
-from .stocks import Stock
+from .etf_holding import EtfHolding
+from .price import Price
+from .asset import Asset
 
 db = SQLAlchemy()
 migrate = Migrate()

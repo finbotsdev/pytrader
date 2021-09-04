@@ -18,9 +18,9 @@ depends_on = None
 
 def upgrade():
     op.create_table(
-        'prices',
-        sa.Column('stock_id', sa.Integer, sa.ForeignKey('stocks.id'), nullable=False, primary_key=True),
-        sa.Column('dt', sa.Date, nullable=False, primary_key=True),
+        'price',
+        sa.Column('asset_id', sa.Integer, sa.ForeignKey('asset.id'), nullable=False, primary_key=True),
+        sa.Column('dt', sa.DateTime, nullable=False, primary_key=True),
         sa.Column('period', sa.Enum('minute', 'hour', 'day', name='PERIOD'), nullable=False, primary_key=True),
         sa.Column('open', sa.Numeric, nullable=True),
         sa.Column('high', sa.Numeric, nullable=True),
@@ -28,12 +28,12 @@ def upgrade():
         sa.Column('close', sa.Numeric, nullable=True),
         sa.Column('volume', sa.Numeric, nullable=True),
     )
-    op.create_index('idx_prices', 'prices', [sa.text('stock_id, period, dt desc')])
-    op.execute("SELECT create_hypertable('prices', 'dt')")
+    op.create_index('idx_prices', 'price', [sa.text('asset_id, period, dt desc')])
+    op.execute("SELECT create_hypertable('price', 'dt')")
 
 
 def downgrade():
-    op.drop_table('prices')
+    op.drop_table('price')
 
     period_enum = postgresql.ENUM('minute', 'hour', 'day', name='PERIOD')
     period_enum.drop(op.get_bind())

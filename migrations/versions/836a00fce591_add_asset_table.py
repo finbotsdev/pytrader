@@ -1,4 +1,4 @@
-"""add stocks table
+"""add asset table
 
 Revision ID: 836a00fce591
 Revises: 817c4542555f
@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     op.create_table(
-        'stocks',
+        'asset',
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('company', sa.Unicode(255), nullable=False),
         sa.Column('asset_class', sa.Unicode(30), default='us_equity'),
@@ -35,4 +35,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table('stocks')
+    op.drop_table('asset')
