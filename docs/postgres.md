@@ -12,8 +12,8 @@
 | `\dt+`               | List tables with more info |
 | `\d+ table_name`     | Get detailed information on a table. |
 | `\df+ function_name` | Show a stored procedure or function code: |
-| `\x`                 | Show query output in the pretty-format: |  
-| `\du`                | List all users: |  
+| `\x`                 | Show query output in the pretty-format: |
+| `\du`                | List all users: |
 
 Create a new role:
 `CREATE ROLE role_name;`
@@ -35,6 +35,18 @@ Create a new database:
 Delete a database permanently:
 `DROP DATABASE [IF EXISTS] db_name;`
 
+To determine the size of a database.
+
+```sql
+SELECT pg_size_pretty( pg_database_size('dbname') );
+```
+
+To determine the size of a table in the current database.
+
+```sql
+SELECT pg_size_pretty( pg_total_relation_size('tablename') );
+```
+
 ## Managing tables
 
 Create a new table or a temporary table
@@ -48,38 +60,38 @@ CREATE [TEMP] TABLE [IF NOT EXISTS] table_name(
 ```
 Add a new column to a table:
 ```sql
-ALTER TABLE table_name 
+ALTER TABLE table_name
 ADD COLUMN new_column_name TYPE;
 ```
 Drop a column in a table:
 ```sql
-ALTER TABLE table_name 
+ALTER TABLE table_name
 DROP COLUMN column_name;
 ```
 Rename a column:
 ```sql
-ALTER TABLE table_name 
-RENAME column_name 
+ALTER TABLE table_name
+RENAME column_name
 TO new_column_name;
 ```
 Set or remove a default value for a column:
 ```sql
-ALTER TABLE table_name 
+ALTER TABLE table_name
 ALTER COLUMN [SET DEFAULT value | DROP DEFAULT]
 ```
 Add a primary key to a table.
 ```sql
-ALTER TABLE table_name 
+ALTER TABLE table_name
 ADD PRIMARY KEY (column,...);
 ```
 Remove the primary key from a table.
 ```sql
-ALTER TABLE table_name 
+ALTER TABLE table_name
 DROP CONSTRAINT primary_key_constraint_name;
 ```
 Rename a table.
 ```sql
-ALTER TABLE table_name 
+ALTER TABLE table_name
 RENAME TO new_table_name;
 ```
 Drop a table and its dependent objects:
@@ -215,19 +227,19 @@ ORDER BY column_name;
 Query data from multiple using the inner join, left join, full outer join, cross join and natural join:
 
 ```sql
-SELECT * 
+SELECT *
 FROM table1
 INNER JOIN table2 ON conditions
-SELECT * 
+SELECT *
 FROM table1
 LEFT JOIN table2 ON conditions
-SELECT * 
+SELECT *
 FROM table1
 FULL OUTER JOIN table2 ON conditions
-SELECT * 
+SELECT *
 FROM table1
 CROSS JOIN table2;
-SELECT * 
+SELECT *
 FROM table1
 NATURAL JOIN table2;
 Return the number of rows of a table.
