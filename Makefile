@@ -1,7 +1,8 @@
 
 deps:
-	brew bundle
-	pip install -r requirements.txt
+	@brew bundle
+	-@pip install -U git+https://github.com/mariostoev/finviz
+	@pip install -r requirements.txt
 
 crontab:
 	python c-sync-crontab.py
