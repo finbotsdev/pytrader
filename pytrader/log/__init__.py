@@ -18,8 +18,8 @@ class ThreadLogFilter(logging.Filter):
         return record.threadName == self.thread_name
 
 def config_root_logger():
-    log_path = create_log_folder(config.FILES_PATH)
-    log_file = f'{log_path}/perThreadLogging.log'
+    log_path = create_log_folder()
+    log_file = f'{log_path}/logger.log'
 
     formatter = "%(asctime)-15s" \
                 "| %(threadName)-11s" \
@@ -59,18 +59,13 @@ def config_root_logger():
     })
 
 
-def create_log_folder(path):
-    if not os.path.exists(config.FILES_PATH):
-        os.mkdir(config.FILES_PATH)
-
-    if not os.path.exists(config.LOGS_PATH):
-        os.mkdir(config.LOGS_PATH)
-
-    path = f'{path}/logs/{createtime}/'
-
-    if not os.path.exists(path):
-        os.mkdir(path)
-
+def create_log_folder():
+    path = os.path.join(
+      config.FILES_PATH,
+      log_date,
+      log_time
+    )
+    os.makedirs(path, exist_ok=True)
     return path
 
 
@@ -106,6 +101,8 @@ def stop_thread_logging(log_handler):
     log_handler.close()
 
 
-createtime = datetime.now().strftime("%Y%m%d_%H%M%S")
+log_date = datetime.now().strftime("%Y.%m.%d")
+log_time = datetime.now().strftime("%H.%M.%S")
+
 logger = logging
 config_root_logger()
