@@ -13,12 +13,13 @@ from sqlalchemy import exc
 from model import Session
 from model.asset import Asset
 from model.etf_holding import EtfHolding
+
+
 """
 c-sync-etfholdings.py
 ---------------------
 grab lists of holdings from various etfs
 maintain a local db of etf holdings so that we can observe changes over time
-
 """
 
 

@@ -10,6 +10,7 @@ from model import Session
 from model.asset import Asset
 from model.mention import Mention
 
+
 """
 c-sync-reddit-mentions.py
 ---------------------

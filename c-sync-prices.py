@@ -10,6 +10,7 @@ from model import Session
 from model.asset import Asset
 from model.price import Price
 
+
 """
 c-sync-prices.py
 ---------------------
