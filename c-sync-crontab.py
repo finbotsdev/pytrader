@@ -58,7 +58,7 @@ def main(args):
 
   # sync redit mentions every hour
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-sync-redit-mentions.py'
+  cmd = f'cd {cwd}; ./cronjob c-sync-reddit-mentions.py'
   job = cron.new(command=cmd, comment=comment)
   job.hour.every(1)
   job.minute.on(0)
