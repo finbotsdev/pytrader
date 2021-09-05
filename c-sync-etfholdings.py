@@ -126,15 +126,11 @@ def main(args):
 
 
 if __name__ == '__main__':
-  timer = pt.Timer()
-
   parser = pt.ArgumentParser()
   parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
-
   args = parser.parse_args()
 
+  timer = pt.Timer()
   logger.info(f'pytrader {__file__}')
-
   main(args)
-
   timer.report()

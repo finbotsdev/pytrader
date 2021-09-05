@@ -69,19 +69,14 @@ def main(args):
   show_jobs()
 
 if __name__ == '__main__':
-  timer = pt.Timer()
-
   parser = pt.ArgumentParser()
   parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
-
   args = parser.parse_args()
 
+  timer = pt.Timer()
   logger.info(f'pytrader {__file__}')
-
   current_user = getpass.getuser()
   cwd = os.getcwd()
   cron = CronTab(user=current_user)
-
   main(args)
-
   timer.report()

@@ -108,25 +108,14 @@ def main(args):
 
 
 if __name__ == '__main__':
-  timer = pt.Timer()
-
   parser = pt.ArgumentParser()
   parser.add_argument("-e", "--end", default="yesterday", help="earliest date to include")
   parser.add_argument("-s", "--start", default="5 years ago", help="latest date to include")
   parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
   parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
-
   args = parser.parse_args()
 
+  timer = pt.Timer()
   logger.info(f'pytrader {__file__}')
-
   main(args)
-
   timer.report()
-
-# 252 trading days in years
-# 6.5 hours in trading day
-# 6.5 * 60 trading minutes in a day
-# ~400 bars per day
-# 2500 bars per week
-# ~100k bars per year
