@@ -1,0 +1,208 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import ast
+import config
+import os
+import pytrader as pt
+from pytrader.data import AlpacaMarkets, date
+from pytrader.log import logger
+import re
+import sqlalchemy as sa
+from sqlalchemy import exc
+import traceback
+
+from model import Session
+from model.asset import Asset
+from model.price import Price
+
+
+"""
+    pytrade
+    ------
+    a cli interface to pytrader
+"""
+
+
+"""
+    assets
+    ------
+    maintain asset table in the database
+"""
+def assets_cmd(_):
+  logger.debug('pytrader assets')
+  logger.debug(args)
+
+  api = AlpacaMarkets()
+  session = Session()
+
+  try:
+    logger.info('get assets list from exchange')
+    assets = api.get_assets()
+
+    for a in assets:
+      asset = session.query(Asset).filter(
+        Asset.symbol == a['symbol'],
+        Asset.exchange == a['exchange']).first()
+
+      if not asset:
+        logger.info(f"create record {a['symbol']} - {a['name']}")
+        asset = Asset(
+          company=a['name'],
+          asset_class=a['class'],
+          exchange=a['exchange'],
+          is_easy_to_borrow=a['easy_to_borrow'],
+          is_etf=False,
+          is_fractionable=a['fractionable'],
+          is_marginable=a['marginable'],
+          is_shortable=a['shortable'],
+          is_tradeable=a['tradable'],
+          status=a['status'],
+          symbol=a['symbol'])
+        session.add(asset)
+      else:
+        logger.info(f"update record {a['symbol']} - {a['name']}")
+        asset.company=a['name']
+        asset.asset_class=a['class']
+        asset.exchange=a['exchange']
+        asset.is_easy_to_borrow=a['easy_to_borrow']
+        asset.is_fractionable=a['fractionable']
+        asset.is_marginable=a['marginable']
+        asset.is_shortable=a['shortable']
+        asset.is_tradeable=a['tradable']
+        asset.status=a['status']
+        asset.symbol=a['symbol']
+
+      session.commit()
+
+    num_assets = session.query(Asset).count()
+    logger.info(f"{num_assets} asset records exist in the database")
+
+  except Exception as e:
+    logger.error(e)
+    print(e)
+    print(traceback.format_exc())
+
+"""
+    download
+    ------
+    download historical data for assets
+"""
+def download_cmd(args):
+    logger.debug('pytrader download')
+    logger.debug(args)
+
+
+"""
+    history
+    ------
+    fetch historical data for assets and store in database
+
+    might want to think about monitoring api calls and managing their speed
+    alpaca has limit of 200 requests per minute
+"""
+def history_cmd(args):
+    logger.debug('pytrader history')
+    logger.debug(args)
+
+
+"""
+    backtest strategy runner
+    ------
+"""
+def backtest_cmd(args):
+    logger.debug('pytrader backtest')
+    logger.debug(args)
+
+
+"""
+    screener
+    ------
+    query symbols to watch using stored procedure queries
+
+    usage:
+    ------
+    tickers=$(pytrade screener); echo $tickers
+"""
+def screener_cmd(args):
+    logger.debug('pytrader screener')
+    logger.debug(args)
+
+
+"""
+    watch
+    ------
+    stream data from exchange for evaluation
+
+"""
+def watch_cmd(args):
+    logger.debug('pytrader watch')
+    logger.debug(args)
+
+
+"""
+    version
+    ------
+    display version information
+"""
+def version_cmd(args):
+    logger.debug('pytrader version')
+    logger.debug(args)
+
+    _version_re = re.compile(r'__version__\s+=\s+(.*)')
+    with open('pytrader/__init__.py', 'rb') as f:
+        version = str(ast.literal_eval(_version_re.search(
+            f.read().decode('utf-8')).group(1)))
+    print(f'pytrader library version {version}')
+
+def main(args):
+    subcommands = {
+        'assets' : assets_cmd,
+        'backtest' : backtest_cmd,
+        'download' : download_cmd,
+        'history' : history_cmd,
+        'screener' : screener_cmd,
+        'watch' : watch_cmd,
+        'version' : version_cmd,
+    }
+    subcommands[args.subcommand](args)
+
+if __name__ == '__main__':
+  parser = pt.ArgumentParser()
+  parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
+
+  subparsers = parser.add_subparsers(dest="subcommand") # this line changed
+  subparsers.required = True
+
+  assets_parser = subparsers.add_parser('assets')
+
+  backtest_parser = subparsers.add_parser('backtest')
+  backtest_parser.add_argument('-s', '--strategy', default='openbreakout', help="the strategy" )
+  backtest_parser.add_argument('-t', '--ticker', default=[], help="the ticker symbol" )
+
+  download_parser = subparsers.add_parser('download')
+  download_parser.add_argument("-e", "--end", default="yesterday", help="earliest date to include")
+  download_parser.add_argument("-i", "--interval", default="minute", help="market data aggregation level (day or minute)")
+  download_parser.add_argument("-s", "--start", default="5 years ago", help="latest date to include")
+  download_parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
+
+  history_parser = subparsers.add_parser('history')
+  history_parser.add_argument("-e", "--end", default="yesterday", help="earliest date to include")
+  history_parser.add_argument("-i", "--interval", default="minute", help="market data aggregation level (day or minute)")
+  history_parser.add_argument("-s", "--start", default="5 years ago", help="latest date to include")
+  history_parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
+
+  screener_parser = subparsers.add_parser('screener')
+  screener_parser.add_argument('-s', '--strategy', default='s&p500', help="the strategy filter to use for the screener" )
+
+  watch_parser = subparsers.add_parser('watch')
+
+  screener_parser = subparsers.add_parser('version')
+
+  args = parser.parse_args()
+
+  timer = pt.Timer()
+  logger.info('pytrader cli tool')
+  main(args)
+  timer.report()
+
