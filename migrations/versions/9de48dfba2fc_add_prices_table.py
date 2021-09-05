@@ -20,7 +20,7 @@ def upgrade():
     op.create_table(
         'price',
         sa.Column('asset_id', sa.Integer, sa.ForeignKey('asset.id')),
-        sa.Column('dt', sa.DateTime, primary_key=True),
+        sa.Column('dt', sa.DateTime),
         sa.Column('period', sa.Enum('minute', 'hour', 'day', name='PERIOD')),
         sa.Column('open', sa.Numeric),
         sa.Column('high', sa.Numeric),
@@ -28,10 +28,7 @@ def upgrade():
         sa.Column('close', sa.Numeric),
         sa.Column('volume', sa.Numeric),
     )
-    # op.create_index('idx_prices', 'price', [sa.text('asset_id, period, dt desc')])
-
     op.execute("SELECT create_hypertable('price', 'dt')")
-
     op.create_unique_constraint('uix_prices', 'price', columns=['asset_id','dt', 'period'])
 
 def downgrade():

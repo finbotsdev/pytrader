@@ -26,7 +26,6 @@ def upgrade():
         sa.Column('url', sa.Text),
     )
     op.execute("SELECT create_hypertable('mention', 'dt')")
-
     op.create_unique_constraint('uix_mentions', 'mention', columns=['asset_id','dt'])
 
 
