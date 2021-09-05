@@ -1,13 +1,11 @@
 from .hello import Hello  # noqa
 import argparse
-import pytrader.log as log
+from pytrader.log import logger
 import sys
 import time
 
-__version__ = '0.1.0'
 
-logger = log.logging
-log.config_root_logger()
+__version__ = '0.1.0'
 
 
 class ArgumentParser(argparse.ArgumentParser):

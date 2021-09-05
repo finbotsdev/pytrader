@@ -5,7 +5,7 @@ import os
 import psycopg2 as pg
 import psycopg2.extras as pgx
 import pytrader as pt
-import pytrader.log as log
+from pytrader.log import logger
 import requests
 import sqlalchemy as sa
 from sqlalchemy import exc
@@ -21,12 +21,9 @@ maintain a local db of etf holdings so that we can observe changes over time
 
 """
 
-timer = pt.Timer()
-
-logger = log.logging
-log.config_root_logger()
 
 session = Session()
+
 
 # store a dictionary of feed urls keyed by ticker symbol
 feeds = {
@@ -128,6 +125,8 @@ def main(args):
 
 
 if __name__ == '__main__':
+  timer = pt.Timer()
+
   parser = pt.ArgumentParser()
   parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
 

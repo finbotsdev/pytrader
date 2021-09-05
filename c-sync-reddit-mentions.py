@@ -2,7 +2,7 @@ import config as cfg
 from datetime import datetime, date, time
 from psaw import PushshiftAPI
 import pytrader as pt
-import pytrader.log as log
+from pytrader.log import logger
 import sqlalchemy as sa
 from sqlalchemy import exc
 
@@ -17,10 +17,6 @@ inspect posts from subredit wallstreetbets
 record observed cashtags
 """
 
-timer = pt.Timer()
-
-logger = log.logging
-log.config_root_logger()
 
 api = PushshiftAPI()
 session = Session()
@@ -74,6 +70,8 @@ def main(args):
 
 
 if __name__ == '__main__':
+  timer = pt.Timer()
+
   parser = pt.ArgumentParser()
   parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
 

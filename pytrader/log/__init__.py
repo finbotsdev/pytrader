@@ -5,7 +5,6 @@ import logging
 import logging.config
 import threading
 
-
 class ThreadLogFilter(logging.Filter):
     """
     This filter only shows log entries for specified thread name
@@ -17,8 +16,6 @@ class ThreadLogFilter(logging.Filter):
 
     def filter(self, record):
         return record.threadName == self.thread_name
-
-createtime = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 def config_root_logger():
     log_path = create_log_folder(config.FILES_PATH)
@@ -107,3 +104,8 @@ def start_thread_logging():
 def stop_thread_logging(log_handler):
     logging.getLogger().removeHandler(log_handler)
     log_handler.close()
+
+
+createtime = datetime.now().strftime("%Y%m%d_%H%M%S")
+logger = logging
+config_root_logger()

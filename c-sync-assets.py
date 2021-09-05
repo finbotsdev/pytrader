@@ -1,7 +1,7 @@
 import config as cfg
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, date
-import pytrader.log as log
+from pytrader.log import logger
 import sqlalchemy as sa
 from sqlalchemy import exc
 
@@ -16,10 +16,6 @@ grab list of assets from data api and write to local database
 for each active tradeable asset get yesterdays minute data
 """
 
-timer = pt.Timer()
-
-logger = log.logging
-log.config_root_logger()
 
 api = AlpacaMarkets()
 session = Session()
@@ -79,6 +75,8 @@ def main(args):
 
 
 if __name__ == '__main__':
+  timer = pt.Timer()
+
   parser = pt.ArgumentParser()
   parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
 

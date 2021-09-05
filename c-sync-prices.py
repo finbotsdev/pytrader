@@ -2,7 +2,7 @@ import config as cfg
 from datetime import datetime
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, date
-import pytrader.log as log
+from pytrader.log import logger
 import sqlalchemy as sa
 from sqlalchemy import exc
 
@@ -17,13 +17,10 @@ grab list of active tradable assets from database
 for each active tradeable asset get historical minute data
 """
 
-timer = pt.Timer()
-
-logger = log.logging
-log.config_root_logger()
 
 api = AlpacaMarkets()
 session = Session()
+
 
 def fetch_bars(symbol, end, start, timeframe='1Min', limit=5000):
   logger.debug(f'fetch_bars {symbol}: {type(symbol)} {end}: {type(end)} {start}: {type(start)}')
@@ -110,6 +107,8 @@ def main(args):
 
 
 if __name__ == '__main__':
+  timer = pt.Timer()
+
   parser = pt.ArgumentParser()
   parser.add_argument("-e", "--end", default="yesterday", help="earliest date to include")
   parser.add_argument("-s", "--start", default="5 years ago", help="latest date to include")
