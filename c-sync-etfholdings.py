@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  logger.info('pytrader initializing')
+  logger.info(f'pytrader {__file__}')
 
   main(args)
 
