@@ -3,6 +3,9 @@ deps:
 	brew bundle
 	pip install -r requirements.txt
 
+crontab:
+	python c-sync-crontab.py
+
 data:
 	python c-sync-assets.py
 	python c-sync-reddit-mentions.py

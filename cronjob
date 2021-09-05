@@ -1,0 +1,6 @@
+#!/bin/bash
+
+source .direnv/python-3.8.9/bin/activate
+source .vars
+
+python "${1:-"c-hello.py"}"
