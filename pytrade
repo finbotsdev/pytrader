@@ -6,6 +6,7 @@ import config
 import os
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, date
+from pytrader.data import YahooFinance
 from pytrader.log import logger
 import re
 import sqlalchemy as sa
@@ -36,52 +37,47 @@ def assets_cmd(_):
   api = AlpacaMarkets()
   session = Session()
 
-  try:
-    logger.info('get assets list from exchange')
-    assets = api.get_assets()
+  logger.info('get assets list from exchange')
+  assets = api.get_assets()
 
-    for a in assets:
-      asset = session.query(Asset).filter(
-        Asset.symbol == a['symbol'],
-        Asset.exchange == a['exchange']).first()
+  for a in assets:
+    asset = session.query(Asset).filter(
+      Asset.symbol == a['symbol'],
+      Asset.exchange == a['exchange']).first()
 
-      if not asset:
-        logger.info(f"create record {a['symbol']} - {a['name']}")
-        asset = Asset(
-          company=a['name'],
-          asset_class=a['class'],
-          exchange=a['exchange'],
-          is_easy_to_borrow=a['easy_to_borrow'],
-          is_etf=False,
-          is_fractionable=a['fractionable'],
-          is_marginable=a['marginable'],
-          is_shortable=a['shortable'],
-          is_tradeable=a['tradable'],
-          status=a['status'],
-          symbol=a['symbol'])
-        session.add(asset)
-      else:
-        logger.info(f"update record {a['symbol']} - {a['name']}")
-        asset.company=a['name']
-        asset.asset_class=a['class']
-        asset.exchange=a['exchange']
-        asset.is_easy_to_borrow=a['easy_to_borrow']
-        asset.is_fractionable=a['fractionable']
-        asset.is_marginable=a['marginable']
-        asset.is_shortable=a['shortable']
-        asset.is_tradeable=a['tradable']
-        asset.status=a['status']
-        asset.symbol=a['symbol']
+    if not asset:
+      logger.info(f"create record {a['symbol']} - {a['name']}")
+      asset = Asset(
+        company=a['name'],
+        asset_class=a['class'],
+        exchange=a['exchange'],
+        is_easy_to_borrow=a['easy_to_borrow'],
+        is_etf=False,
+        is_fractionable=a['fractionable'],
+        is_marginable=a['marginable'],
+        is_shortable=a['shortable'],
+        is_tradeable=a['tradable'],
+        status=a['status'],
+        symbol=a['symbol'])
+      session.add(asset)
+    else:
+      logger.info(f"update record {a['symbol']} - {a['name']}")
+      asset.company=a['name']
+      asset.asset_class=a['class']
+      asset.exchange=a['exchange']
+      asset.is_easy_to_borrow=a['easy_to_borrow']
+      asset.is_fractionable=a['fractionable']
+      asset.is_marginable=a['marginable']
+      asset.is_shortable=a['shortable']
+      asset.is_tradeable=a['tradable']
+      asset.status=a['status']
+      asset.symbol=a['symbol']
 
-      session.commit()
+    session.commit()
 
-    num_assets = session.query(Asset).count()
-    logger.info(f"{num_assets} asset records exist in the database")
+  num_assets = session.query(Asset).count()
+  logger.info(f"{num_assets} asset records exist in the database")
 
-  except Exception as e:
-    logger.error(e)
-    print(e)
-    print(traceback.format_exc())
 
 """
     download
@@ -89,8 +85,36 @@ def assets_cmd(_):
     download historical data for assets
 """
 def download_cmd(args):
-    logger.debug('pytrader download')
-    logger.debug(args)
+  logger.debug('pytrader download')
+  logger.debug(args)
+
+  end = args.end
+  interval = args.interval
+  start = args.start
+  tickers = args.tickers
+
+  api = YahooFinance()
+  session = Session()
+
+  if not tickers: # if no tickers provided fetch all from database
+    assets = session.query(Asset.symbol).filter(
+      Asset.status == 'active',
+      Asset.is_tradeable == True
+    ).all()
+    tickers = [a.symbol for a in assets]
+
+  intervals = { # map patam interval to what yfinance expects
+    'minute': '1m',
+    'day': '1d'
+  }
+
+  for s in tickers: # iterate tickers and fetch historical data
+    logger.info(f'fetching market data ({interval}) for {s} beginning {start} and ending {end}')
+    for ticker in tickers:
+      api.set_symbol(ticker)
+      df = api.history(end = date(args.end), interval = intervals[args.interval], start = date(args.start) )
+      os.makedirs(f'./.data/{interval}', exist_ok=True)
+      df.to_csv(f'./.data/{interval}/{s}.csv')
 
 
 """
@@ -156,6 +180,8 @@ def version_cmd(args):
     print(f'pytrader library version {version}')
 
 def main(args):
+  try:
+
     subcommands = {
         'assets' : assets_cmd,
         'backtest' : backtest_cmd,
@@ -166,6 +192,12 @@ def main(args):
         'version' : version_cmd,
     }
     subcommands[args.subcommand](args)
+
+  except Exception as e:
+    logger.error(e)
+    print(e)
+    print(traceback.format_exc())
+
 
 if __name__ == '__main__':
   parser = pt.ArgumentParser()
@@ -182,7 +214,7 @@ if __name__ == '__main__':
 
   download_parser = subparsers.add_parser('download')
   download_parser.add_argument("-e", "--end", default="yesterday", help="earliest date to include")
-  download_parser.add_argument("-i", "--interval", default="minute", help="market data aggregation level (day or minute)")
+  download_parser.add_argument("-i", "--interval", default="day", help="market data aggregation level (day or minute)")
   download_parser.add_argument("-s", "--start", default="5 years ago", help="latest date to include")
   download_parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
 
