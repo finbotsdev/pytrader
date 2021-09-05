@@ -25,47 +25,62 @@ log.config_root_logger()
 api = PushshiftAPI()
 session = Session()
 
-start_time = int(datetime.combine(date.today(), time()).timestamp())
 
-logger.info('search_submissions')
-submissions = api.search_submissions(after=start_time,
-                                    subreddit='wallstreetbets',
-                                    filter=['url','author', 'title', 'subreddit'],
-                                    limit=50)
+def main(args):
+  print(args)
 
-words = [] # list to hold submission title words
-for submission in submissions:
-  sub_words = submission.title.split()
-  words.extend(sub_words)
-  cashtags = list(set(filter(lambda word: word.lower().startswith('$'), sub_words)))
-  if cashtags:
-    logger.info(f"\n{submission.created_utc} - {submission.title} ({submission.author})")
-    logger.info(submission.url)
+  start_time = int(datetime.combine(date.today(), time()).timestamp())
 
-    for cashtag in cashtags: # iterate cashtags in submisstion title
-      try:
-        symbol = cashtag[1:]
-        asset = session.query(Asset).filter(Asset.symbol == symbol).first()
+  logger.info('search_submissions')
+  submissions = api.search_submissions(after=start_time,
+                                      subreddit='wallstreetbets',
+                                      filter=['url','author', 'title', 'subreddit'],
+                                      limit=50)
 
-        if asset:
-          mention = Mention(
-            asset_id=asset.id,
-            dt=datetime.fromtimestamp(submission.created_utc),
-            message=submission.title,
-            source='reddit',
-            url=submission.url
-          )
-          session.add(mention)
-          session.commit()
+  words = [] # list to hold submission title words
+  for submission in submissions:
+    sub_words = submission.title.split()
+    words.extend(sub_words)
+    cashtags = list(set(filter(lambda word: word.lower().startswith('$'), sub_words)))
+    if cashtags:
+      logger.info(f"\n{submission.created_utc} - {submission.title} ({submission.author})")
+      logger.info(submission.url)
 
-      except Exception as e:
-        logger.error(e)
-        print(e)
-        session.rollback()
+      for cashtag in cashtags: # iterate cashtags in submisstion title
+        try:
+          symbol = cashtag[1:]
+          asset = session.query(Asset).filter(Asset.symbol == symbol).first()
 
-logger.info('get cashtags from submissions')
+          if asset:
+            mention = Mention(
+              asset_id=asset.id,
+              dt=datetime.fromtimestamp(submission.created_utc),
+              message=submission.title,
+              source='reddit',
+              url=submission.url
+            )
+            session.add(mention)
+            session.commit()
 
-cashtags = list(set(filter(lambda word: word.lower().startswith('$'), words)))
-logger.info(f"Cashtags Mentioned {cashtags}")
+        except Exception as e:
+          logger.error(e)
+          print(e)
+          session.rollback()
 
-timer.report()
+  logger.info('get cashtags from submissions')
+  cashtags = list(set(filter(lambda word: word.lower().startswith('$'), words)))
+
+  logger.info(f"Cashtags Mentioned {cashtags}")
+
+
+if __name__ == '__main__':
+  parser = pt.ArgumentParser()
+  parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
+
+  args = parser.parse_args()
+
+  logger.info('pytrader initializing')
+
+  main(args)
+
+  timer.report()

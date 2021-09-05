@@ -28,8 +28,6 @@ log.config_root_logger()
 
 session = Session()
 
-today = date.today()
-
 # store a dictionary of feed urls keyed by ticker symbol
 feeds = {
     "ARKK": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_INNOVATION_ETF_ARKK_HOLDINGS.csv",
@@ -38,6 +36,8 @@ feeds = {
     "ARKG": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_GENOMIC_REVOLUTION_MULTISECTOR_ETF_ARKG_HOLDINGS.csv",
     "ARKF": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_FINTECH_INNOVATION_ETF_ARKF_HOLDINGS.csv",
     "ARKX": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_SPACE_EXPLORATION_&_INNOVATION_ETF_ARKX_HOLDINGS.csv",
+    "IZRL": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_ISRAEL_INNOVATIVE_TECHNOLOGY_ETF_IZRL_HOLDINGS.csv",
+    "PRNT": "https://ark-funds.com/wp-content/fundsiteliterature/csv/THE_3D_PRINTING_ETF_PRNT_HOLDINGS.csv",
 }
 
 # Real comments are more complicated ...
@@ -61,63 +61,80 @@ def read_and_filter_csv(csv_path, *filters):
         reader = csv.DictReader(iter_clean_lines, delimiter=',')
         return [row for row in reader]
 
-try:
-  known_etfs = ['ARKF', 'ARKG', 'ARKK', 'ARKQ', 'ARKX', 'IRZL', 'PRNT']
-  for asset in session.query(Asset).filter(Asset.symbol.in_(known_etfs)):
-    asset.is_etf = True
-  session.commit()
 
-  for etf in session.query(Asset).filter(Asset.is_etf == True):
-    logger.info(f"Download Holdings Report for {etf.company} ({etf.symbol})")
+def main(args):
+  print(args)
 
-    # create directory to store download files
-    dirname = os.path.dirname(__file__)
-    filepath = os.path.join(dirname, '.data', 'holdings', today.strftime('%Y-%m-%d'))
-    os.path.dirname(__file__)
-    os.makedirs(filepath, exist_ok=True)
+  today = date.today().strftime('%Y-%m-%d')
 
-    # download updated csv file for fund
-    if etf.symbol in feeds.keys():
-      url = feeds[etf.symbol]
-      logger.info(f"    {url}")
+  try:
+    known_etfs = ['ARKF', 'ARKG', 'ARKK', 'ARKQ', 'ARKX', 'IRZL', 'PRNT']
+    for asset in session.query(Asset).filter(Asset.symbol.in_(known_etfs)):
+      asset.is_etf = True
+    session.commit()
 
-      hfile = f"{filepath}/ETF_{etf.symbol}_HOLDINGS.csv"
+    for etf in session.query(Asset).filter(Asset.is_etf == True):
+      logger.info(f"Download Holdings Report for {etf.company} ({etf.symbol})")
 
-      headers = {
-        'User-Agent': 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
-      }
+      # create directory to store download files
+      dirname = os.path.dirname(__file__)
+      filepath = os.path.join(dirname, '.data', 'holdings', today)
+      os.path.dirname(__file__)
+      os.makedirs(filepath, exist_ok=True)
 
-      with requests.get(url, headers=headers, stream=True) as r:
-        r.raise_for_status()
-        with open(hfile, 'wb') as f:
-          for chunk in r.iter_content(chunk_size=8192):
-            f.write(chunk)
+      # download updated csv file for fund
+      if etf.symbol in feeds.keys():
+        url = feeds[etf.symbol]
+        logger.info(f"    {url}")
 
-      try:
-        for l in read_and_filter_csv(hfile, is_comment, is_whitespace):
-          if l['date'] and l['ticker'] and l['shares'] and l['weight(%)']:
-            holding = session.query(Asset).filter(Asset.symbol == l['ticker']).first()
-            if holding:
-              logger.info(f"    {etf.symbol} holds {l['shares']} shares of {holding.symbol} which is {l['weight(%)']}% of their holdings")
-              eft_holding = EtfHolding(
-                etf_id=etf.id,
-                holding_id=holding.id,
-                dt=l['date'],
-                shares=l['shares'],
-                weight=l['weight(%)'],
-              )
-              session.add(eft_holding)
-        session.commit()
-      except Exception as e:
-        logger.error(e)
-        print(e)
+        hfile = f"{filepath}/ETF_{etf.symbol}_HOLDINGS.csv"
 
-    else:
-        logger.info(f"{etf.symbol} does not exist in feeds dict")
+        headers = {
+          'User-Agent': 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
+        }
 
-except Exception as e:
-  logger.error(e)
-  print(e)
-  pass
+        with requests.get(url, headers=headers, stream=True) as r:
+          r.raise_for_status()
+          with open(hfile, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+              f.write(chunk)
 
-timer.report()
+        try:
+          for l in read_and_filter_csv(hfile, is_comment, is_whitespace):
+            if l['date'] and l['ticker'] and l['shares'] and l['weight(%)']:
+              holding = session.query(Asset).filter(Asset.symbol == l['ticker']).first()
+              if holding:
+                logger.info(f"    {etf.symbol} holds {l['shares']} shares of {holding.symbol} which is {l['weight(%)']}% of their holdings")
+                eft_holding = EtfHolding(
+                  etf_id=etf.id,
+                  holding_id=holding.id,
+                  dt=l['date'],
+                  shares=l['shares'],
+                  weight=l['weight(%)'],
+                )
+                session.add(eft_holding)
+          session.commit()
+        except Exception as e:
+          logger.error(e)
+          print(e)
+
+      else:
+          logger.info(f"{etf.symbol} does not exist in feeds dict")
+
+  except Exception as e:
+    logger.error(e)
+    print(e)
+    pass
+
+
+if __name__ == '__main__':
+  parser = pt.ArgumentParser()
+  parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
+
+  args = parser.parse_args()
+
+  logger.info('pytrader initializing')
+
+  main(args)
+
+  timer.report()
