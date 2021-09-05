@@ -9,6 +9,7 @@ from pytrader.log import logger
 import requests
 import sqlalchemy as sa
 from sqlalchemy import exc
+import traceback
 
 from model import Session
 from model.asset import Asset
@@ -122,7 +123,7 @@ def main(args):
   except Exception as e:
     logger.error(e)
     print(e)
-    pass
+    print(traceback.format_exc())
 
 
 if __name__ == '__main__':

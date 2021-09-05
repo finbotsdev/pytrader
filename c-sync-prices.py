@@ -5,6 +5,7 @@ from pytrader.data import AlpacaMarkets, date
 from pytrader.log import logger
 import sqlalchemy as sa
 from sqlalchemy import exc
+import traceback
 
 from model import Session
 from model.asset import Asset
@@ -101,10 +102,8 @@ def main(args):
 
   except Exception as e:
     logger.error(e)
-    print('asset', asset)
     print(e)
     print(traceback.format_exc())
-    pass
 
 
 if __name__ == '__main__':

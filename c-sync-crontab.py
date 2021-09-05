@@ -4,6 +4,7 @@ import getpass
 import os
 import pytrader as pt
 from pytrader.log import logger
+import traceback
 
 
 """
@@ -17,56 +18,60 @@ def show_jobs():
       print(job)
 
 def main(args):
+  try:
+    print('cron list before')
+    show_jobs()
 
-  print('cron list before')
-  show_jobs()
+    # remove all pytrader cron jobs
+    cron.remove_all(comment='pytrader')
 
-  # remove all pytrader cron jobs
-  cron.remove_all(comment='pytrader')
+    # say hellp
+    comment = f'pytrader'
+    cmd = f'cd {cwd}; ./cronjob c-hello.py'
+    job = cron.new(command=cmd, comment=comment)
+    job.day.every(1)
+    job.hour.every(1)
+    job.minute.on(0)
 
-  # say hellp
-  comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-hello.py'
-  job = cron.new(command=cmd, comment=comment)
-  job.day.every(1)
-  job.hour.every(1)
-  job.minute.on(0)
+    # sync assets at 8:00 pm
+    comment = f'pytrader'
+    cmd = f'cd {cwd}; ./cronjob c-sync-assets.py'
+    job = cron.new(command=cmd, comment=comment)
+    job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+    job.hour.every(20)
+    job.minute.on(0)
 
-  # sync assets at 8:00 pm
-  comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-sync-assets.py'
-  job = cron.new(command=cmd, comment=comment)
-  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(20)
-  job.minute.on(0)
+    # sync etf holdings at 8:05 pm
+    comment = f'pytrader'
+    cmd = f'cd {cwd}; ./cronjob c-sync-etfholdings.py'
+    job = cron.new(command=cmd, comment=comment)
+    job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+    job.hour.every(20)
+    job.minute.on(5)
 
-  # sync etf holdings at 8:05 pm
-  comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-sync-etfholdings.py'
-  job = cron.new(command=cmd, comment=comment)
-  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(20)
-  job.minute.on(5)
+    # sync prices daily at 8:10 pm
+    comment = f'pytrader'
+    cmd = f'cd {cwd}; ./cronjob c-sync-prices.py'
+    job = cron.new(command=cmd, comment=comment)
+    job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+    job.hour.every(20)
+    job.minute.on(10)
 
-  # sync prices daily at 8:10 pm
-  comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-sync-prices.py'
-  job = cron.new(command=cmd, comment=comment)
-  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(20)
-  job.minute.on(10)
+    # sync redit mentions every hour
+    comment = f'pytrader'
+    cmd = f'cd {cwd}; ./cronjob c-sync-reddit-mentions.py'
+    job = cron.new(command=cmd, comment=comment)
+    job.hour.every(1)
+    job.minute.on(0)
 
-  # sync redit mentions every hour
-  comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-sync-reddit-mentions.py'
-  job = cron.new(command=cmd, comment=comment)
-  job.hour.every(1)
-  job.minute.on(0)
+    cron.write()
 
-  cron.write()
-
-  print('cron list after')
-  show_jobs()
+    print('cron list after')
+    show_jobs()
+  except Exception as e:
+    logger.error(e)
+    print(e)
+    print(traceback.format_exc())
 
 if __name__ == '__main__':
   parser = pt.ArgumentParser()

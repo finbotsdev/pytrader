@@ -31,3 +31,12 @@ export IEX_API_KEY_ID=Tpk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 export IEX_API_SECRET_KEY=Tsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 export IEX_API_DATA_URL=https://sandbox.iexapis.com
 export IEX_API_VERSION=v1
+
+# smtp config
+export SMTP_HOST='smtp.gmail.com'
+export SMTP_PASS=xxxxxxxxxxxxxxxxxxxxxxxx
+export SMTP_PORT=587
+export SMTP_USER=xxxxxxxxxxxxxxxxxxxxxxxx
+export SMTP_SEND_FROM=xxxxxxxxxxxxxxxxxxxxxxxx
+export SMTP_SEND_TO='["email@example.com"]' # write as list
+
