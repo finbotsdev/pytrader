@@ -1,6 +1,6 @@
 from .alpaca import AlpacaMarkets
 from .iex import IEXCloud
-
+from .yahoo import YahooFinance
 from datetime import datetime
 import parsedatetime
 
