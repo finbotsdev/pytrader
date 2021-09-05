@@ -6,10 +6,13 @@ source .vars
 param="${1:-"c-hello.py"}"
 
 case $param in
-c-sync-assets.py)
-  ./pytrade assets
-  ;;
-*)
-  python $param
-  ;;
+  c-sync-assets.py)
+    ./pytrade assets
+    ;;
+  c-sync-etfholdings.py)
+    ./pytrade etfholdings
+    ;;
+  *)
+    python $param
+    ;;
 esac
