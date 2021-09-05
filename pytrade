@@ -3,6 +3,8 @@
 
 import ast
 import config
+from crontab import CronTab
+import getpass
 import os
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, date
@@ -78,6 +80,72 @@ def assets_cmd(_):
 
   num_assets = session.query(Asset).count()
   logger.info(f"{num_assets} asset records exist in the database")
+
+
+"""
+    crontab
+    ------
+    update crontab for pytrader
+"""
+def crontab_cmd(_):
+  logger.debug('pytrader crontab')
+  logger.debug(args)
+
+  current_user = getpass.getuser()
+  cwd = os.getcwd()
+  cron = CronTab(user=current_user)
+
+  logger.info('cron list before')
+  for job in cron:
+    print(job)
+
+  # remove all pytrader cron jobs
+  cron.remove_all(comment='pytrader')
+
+  # say hellp
+  comment = f'pytrader'
+  cmd = f'cd {cwd}; ./cronjob c-hello.py'
+  job = cron.new(command=cmd, comment=comment)
+  job.day.every(1)
+  job.hour.every(1)
+  job.minute.on(0)
+
+  # sync assets at 8:00 pm
+  comment = f'pytrader'
+  cmd = f'cd {cwd}; ./cronjob c-sync-assets.py'
+  job = cron.new(command=cmd, comment=comment)
+  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+  job.hour.every(20)
+  job.minute.on(0)
+
+  # sync etf holdings at 8:05 pm
+  comment = f'pytrader'
+  cmd = f'cd {cwd}; ./cronjob c-sync-etfholdings.py'
+  job = cron.new(command=cmd, comment=comment)
+  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+  job.hour.every(20)
+  job.minute.on(5)
+
+  # sync prices daily at 8:10 pm
+  comment = f'pytrader'
+  cmd = f'cd {cwd}; ./cronjob c-sync-prices.py'
+  job = cron.new(command=cmd, comment=comment)
+  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+  job.hour.every(20)
+  job.minute.on(10)
+
+  # sync redit mentions every hour
+  comment = f'pytrader'
+  cmd = f'cd {cwd}; ./cronjob c-sync-reddit-mentions.py'
+  job = cron.new(command=cmd, comment=comment)
+  job.hour.every(1)
+  job.minute.on(0)
+
+  cron.write()
+
+  logger.info('cron list after')
+  for job in cron:
+    print(job)
 
 
 """
@@ -191,6 +259,7 @@ def main(args):
 
     subcommands = {
         'assets' : assets_cmd,
+        'crontab' : crontab_cmd,
         'backtest' : backtest_cmd,
         'download' : download_cmd,
         'history' : history_cmd,
@@ -218,6 +287,8 @@ if __name__ == '__main__':
   backtest_parser = subparsers.add_parser('backtest')
   backtest_parser.add_argument('-s', '--strategy', default='openbreakout', help="the strategy" )
   backtest_parser.add_argument('-t', '--ticker', default=[], help="the ticker symbol" )
+
+  assets_parser = subparsers.add_parser('crontab')
 
   download_parser = subparsers.add_parser('download')
   download_parser.add_argument("-e", "--end", default="yesterday", help="earliest date to include")
