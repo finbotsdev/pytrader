@@ -97,6 +97,85 @@ def backtest_cmd(args):
 
 
 """
+  bars
+  ------
+"""
+def get_chunk_bars(symbol, end, start):
+  logger.debug(f'fetch_range_bars {symbol}: {type(symbol)} {end}: {type(end)} {start}: {type(start)}')
+  # convert string dates to datetime objects
+  dstart = dt.datetime.strptime(date(start), '%Y-%m-%d')
+  dend = dt.datetime.strptime(date(end), '%Y-%m-%d')
+  # get count of days between start and end date
+  days_remaining = abs(dend-dstart).days
+
+  api = AlpacaMarkets()
+
+  # fetch bar data in week sized chunks
+  bars = []
+  while days_remaining > 0:
+    start = days_remaining
+    end = days_remaining -7
+    days_remaining = days_remaining - 8
+
+    start_date = date(f'{start} days ago')
+    end_date = date(f'{end} days ago')
+
+    result = api.get_bars(symbol, end=date(end_date), start=date(start_date), timeframe='1Min', limit=10000)
+    if result and result['bars']:
+      count = len(result['bars'])
+      res = result['bars']
+    else:
+      res = []
+    logger.info(f'{symbol} - {start_date} to {end_date} - {len(res)} bars returned')
+
+    bars.extend(res)
+
+  logger.info(f'{dstart} to {dend} - {len(bars)} minute bars')
+  return bars
+
+def bars_cmd(args):
+  logger.debug('pytrader history')
+  logger.debug(args)
+
+  session = Session()
+
+  logger.info('get assets list from local db')
+  query = session.query(Asset).filter(
+    Asset.status == 'active',
+    Asset.is_tradeable == True)
+
+  if args.tickers:
+    query = query.filter(Asset.symbol.in_(args.tickers))
+
+  assets = query.all()
+
+  for asset in assets:
+    bars = get_chunk_bars(asset.symbol, end=args.end, start=args.start)
+    for b in bars:
+      try:
+        logger.info(f"create price for {asset.symbol} {b['t']} ")
+        session.add(Price(
+          asset_id=asset.id,
+          period='minute',
+          dt=b['t'],
+          open=b['o'],
+          high=b['h'],
+          low=b['l'],
+          close=b['c'],
+          volume=b['v']
+        ))
+        session.commit()
+
+      except Exception as e:
+        session.rollback()
+        logger.error(e)
+        print(e)
+
+  num_prices = session.query(Price).count()
+  logger.info(f"{num_prices} price records exist in the database")
+
+
+"""
   crontab
   ------
   update crontab for pytrader
@@ -281,68 +360,6 @@ def etfholdings_cmd(args):
 
 
 """
-  history
-  ------
-"""
-def history_cmd(args):
-  logger.debug('pytrader history')
-  logger.debug(args)
-
-  known_etfs = ['ARKF', 'ARKG', 'ARKK', 'ARKQ', 'ARKX', 'IRZL', 'PRNT']
-  for asset in session.query(Asset).filter(Asset.symbol.in_(known_etfs)):
-    asset.is_etf = True
-  session.commit()
-
-  for etf in session.query(Asset).filter(Asset.is_etf == True):
-    logger.info(f"Download Holdings Report for {etf.company} ({etf.symbol})")
-
-    # create directory to store download files
-    dirname = os.path.dirname(__file__)
-    filepath = os.path.join(dirname, '.data', 'holdings', today)
-    os.path.dirname(__file__)
-    os.makedirs(filepath, exist_ok=True)
-
-    # download updated csv file for fund
-    if etf.symbol in feeds.keys():
-      url = feeds[etf.symbol]
-      logger.info(f"    {url}")
-
-      hfile = f"{filepath}/ETF_{etf.symbol}_HOLDINGS.csv"
-
-      headers = {
-        'User-Agent': 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
-      }
-
-      with requests.get(url, headers=headers, stream=True) as r:
-        r.raise_for_status()
-        with open(hfile, 'wb') as f:
-          for chunk in r.iter_content(chunk_size=8192):
-            f.write(chunk)
-
-      try:
-        for l in read_and_filter_csv(hfile, is_comment, is_whitespace):
-          if l['date'] and l['ticker'] and l['shares'] and l['weight(%)']:
-            holding = session.query(Asset).filter(Asset.symbol == l['ticker']).first()
-            if holding:
-              logger.info(f"    {etf.symbol} holds {l['shares']} shares of {holding.symbol} which is {l['weight(%)']}% of their holdings")
-              eft_holding = EtfHolding(
-                etf_id=etf.id,
-                holding_id=holding.id,
-                dt=l['date'],
-                shares=l['shares'],
-                weight=l['weight(%)'],
-              )
-              session.add(eft_holding)
-        session.commit()
-      except Exception as e:
-        logger.error(e)
-        print(e)
-
-    else:
-      logger.info(f"{etf.symbol} does not exist in feeds dict")
-
-
-"""
   screener
   ------
   query symbols to watch using stored procedure queries
@@ -394,9 +411,9 @@ def main(args):
         'assets' : assets_cmd,
         'crontab' : crontab_cmd,
         'backtest' : backtest_cmd,
+        'bars' : bars_cmd,
         'download' : download_cmd,
         'etfholdings' : etfholdings_cmd,
-        'history' : history_cmd,
         'screener' : screener_cmd,
         'watch' : watch_cmd,
         'version' : version_cmd,
@@ -422,6 +439,11 @@ if __name__ == '__main__':
   backtest_parser.add_argument('-s', '--strategy', default='openbreakout', help="the strategy" )
   backtest_parser.add_argument('-t', '--ticker', default=[], help="the ticker symbol" )
 
+  bars_parser = subparsers.add_parser('bars')
+  bars_parser.add_argument("-e", "--end", default="yesterday", help="earliest date to include")
+  bars_parser.add_argument("-s", "--start", default="5 years ago", help="latest date to include")
+  bars_parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
+
   crontab_parser = subparsers.add_parser('crontab')
 
   download_parser = subparsers.add_parser('download')
@@ -431,12 +453,6 @@ if __name__ == '__main__':
   download_parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
 
   etf_parser = subparsers.add_parser('etfholdings')
-
-  history_parser = subparsers.add_parser('history')
-  history_parser.add_argument("-e", "--end", default="yesterday", help="earliest date to include")
-  history_parser.add_argument("-i", "--interval", default="minute", help="market data aggregation level (day or minute)")
-  history_parser.add_argument("-s", "--start", default="5 years ago", help="latest date to include")
-  history_parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
 
   screener_parser = subparsers.add_parser('screener')
   screener_parser.add_argument('-s', '--strategy', default='s&p500', help="the strategy filter to use for the screener" )

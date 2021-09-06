@@ -128,6 +128,7 @@ class AlpacaMarkets():
     # GET/v2/stocks/snapshots
     # GET/v2/stocks/{symbol}/snapshot
 
+
     # https://alpaca.markets/docs/api-documentation/api-v2/market-data/alpaca-data-api-v2/real-time/
 
     # https://alpaca.markets/docs/api-documentation/api-v2/watchlist/

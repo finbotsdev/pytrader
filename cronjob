@@ -12,6 +12,9 @@ case $param in
   c-sync-etfholdings.py)
     ./pytrade etfholdings
     ;;
+  c-sync-prices.py)
+    ./pytrade bars
+    ;;
   *)
     python $param
     ;;
