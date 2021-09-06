@@ -90,6 +90,7 @@ def assets_cmd(_):
 """
   backtest strategy runner
   ------
+  execute selected strategy script
 """
 def backtest_cmd(args):
   logger.debug('pytrader backtest')
@@ -196,17 +197,9 @@ def crontab_cmd(_):
   # remove all pytrader cron jobs
   cron.remove_all(comment='pytrader')
 
-  # say hellp
-  comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-hello.py'
-  job = cron.new(command=cmd, comment=comment)
-  job.day.every(1)
-  job.hour.every(1)
-  job.minute.on(0)
-
   # sync assets at 8:00 pm
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-sync-assets.py'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade assets'
   job = cron.new(command=cmd, comment=comment)
   job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
   job.hour.every(20)
@@ -214,7 +207,7 @@ def crontab_cmd(_):
 
   # sync etf holdings at 8:05 pm
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-sync-etfholdings.py'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade etfholdings'
   job = cron.new(command=cmd, comment=comment)
   job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
   job.hour.every(20)
@@ -222,7 +215,7 @@ def crontab_cmd(_):
 
   # sync prices daily at 8:10 pm
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-sync-prices.py'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade bars'
   job = cron.new(command=cmd, comment=comment)
   job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
   job.hour.every(20)
@@ -230,7 +223,7 @@ def crontab_cmd(_):
 
   # sync redit mentions every hour
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob c-sync-reddit-mentions.py'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade mentions'
   job = cron.new(command=cmd, comment=comment)
   job.hour.every(1)
   job.minute.on(0)
@@ -359,6 +352,15 @@ def etfholdings_cmd(args):
     else:
         logger.info(f"{etf.symbol} does not exist in feeds dict")
 
+"""
+  mentions
+  ------
+"""
+def mentions_cmd(args):
+  logger.debug('pytrader mention')
+  logger.debug(args)
+  os.system(f'python mentions/{args.strategy}.py')
+
 
 """
   screener
@@ -415,6 +417,7 @@ def main(args):
         'bars' : bars_cmd,
         'download' : download_cmd,
         'etfholdings' : etfholdings_cmd,
+        'mentions' : mentions_cmd,
         'screener' : screener_cmd,
         'watch' : watch_cmd,
         'version' : version_cmd,
@@ -436,9 +439,9 @@ if __name__ == '__main__':
 
   assets_parser = subparsers.add_parser('assets')
 
-  backtest_parser = subparsers.add_parser('backtest')
-  backtest_parser.add_argument('-s', '--strategy', default='openbreakout', help="the strategy" )
-  backtest_parser.add_argument('-t', '--ticker', default=[], help="the ticker symbol" )
+  mention_parser = subparsers.add_parser('backtest')
+  mention_parser.add_argument('-s', '--strategy', default='openbreakout', help="the strategy" )
+  mention_parser.add_argument('-t', '--ticker', default=[], help="the ticker symbol" )
 
   bars_parser = subparsers.add_parser('bars')
   bars_parser.add_argument("-e", "--end", default="yesterday", help="earliest date to include")
@@ -454,6 +457,9 @@ if __name__ == '__main__':
   download_parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
 
   etf_parser = subparsers.add_parser('etfholdings')
+
+  mention_parser = subparsers.add_parser('mentions')
+  mention_parser.add_argument('-s', '--strategy', default='wallstreetbets', help="the strategy" )
 
   screener_parser = subparsers.add_parser('screener')
   screener_parser.add_argument('-s', '--strategy', default='s&p500', help="the strategy filter to use for the screener" )
