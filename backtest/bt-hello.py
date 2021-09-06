@@ -3,7 +3,7 @@
 import backtrader as bt
 import config
 import pytrader as pt
-from pytrader.backtest import argparse, data,
+from pytrader.backtest import cli_options_parser, feed
 from pytrader.log import logger
 import datetime
 import os
@@ -49,8 +49,9 @@ def main(args):
     cerebro.addstrategy(Strategy)
     cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
 
-    feed = data(source='yfinance', symbol=args.ticker, start=args.start, end=args.end)
-    cerebro.adddata(feed)
+    data = feed(source='local', symbol=args.ticker, start=args.start, end=args.end)
+    print(f'data feed returned type {type(data)}')
+    cerebro.adddata(data)
 
     value = cerebro.broker.getvalue()
     print(f'Starting Portfolio Value ${value:,.2f}')
@@ -63,7 +64,7 @@ def main(args):
     cerebro.plot()
 
 if __name__ == '__main__':
-  args = argparse()
+  args = cli_options_parser()
   print(args)
 
   timer = pt.Timer()
