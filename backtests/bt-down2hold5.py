@@ -6,13 +6,13 @@ import os
 import sys
 
 
+
 """
 backtrader strategy - hold5
 
 if closing price is down for two consecutive periods buy
 sell position after 5 periods
 """
-
 
 class Strategy(bt.Strategy):
 
@@ -34,7 +34,7 @@ class Strategy(bt.Strategy):
             if self.dataclose[0] < self.dataclose[-1]:
                 # current close is less than previous close
                 if self.dataclose[-1] < self.dataclose[-2]:
-                    # previous close less than previous close
+                    # previous close less than previous close 
                     self.log(f'BUY, {self.dataclose[0]:.2f}')
                     self.buy()
 
@@ -43,7 +43,7 @@ class Strategy(bt.Strategy):
                 # sell our position after 5 periods
                 self.log(f'SELL, {self.dataclose[0]:.2f}')
                 self.sell()
-
+    
     def notify(self, order):
         if order.status in [order.Submitted, order.Accepted]:
             return

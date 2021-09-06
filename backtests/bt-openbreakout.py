@@ -1,3 +1,4 @@
+
 import backtrader as bt
 import config
 import pytrader as pt
@@ -32,7 +33,7 @@ class Strategy(bt.Strategy):
         ohlcv.append(str(self.data.close[0]))
         ohlcv.append(str(self.data.volume[0]))
         print(",".join(ohlcv))
-    
+
     def next(self):
         self.log_data()
         if not self.data_ready:
