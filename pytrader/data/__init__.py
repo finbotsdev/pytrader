@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-from .alpaca import AlpacaMarkets
+from .alpaca import AlpacaMarkets, AlpacaStream
 from datetime import datetime
 from .iex import IEXCloud
 import parsedatetime

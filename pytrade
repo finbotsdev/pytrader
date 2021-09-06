@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import ast
-import config
 from crontab import CronTab
 import csv
 import datetime as dt
@@ -10,7 +9,7 @@ import getpass
 import os
 import pytrader as pt
 from pytrader.csv import is_comment, is_whitespace, read_and_filter_csv
-from pytrader.data import AlpacaMarkets, date
+from pytrader.data import AlpacaMarkets, AlpacaStream, date
 from pytrader.data import YahooFinance
 from pytrader.log import logger
 import pytrader.screener as screener
@@ -372,24 +371,28 @@ def mentions_cmd(args):
   tickers=$(pytrade screener); echo $tickers
 """
 def screener_cmd(args):
-    logger.debug('pytrader screener')
-    logger.debug(args)
+  logger.debug('pytrader screener')
+  logger.debug(args)
 
-    strategy = args.strategy
+  strategy = args.strategy
 
-    logger.debug(f'fetching symbols to watch using strategy {strategy}')
-    search = screener.Search(strategy)
-    symbols = search.symbols()
-    print(" ".join(symbols))
+  logger.debug(f'fetching symbols to watch using strategy {strategy}')
+  search = screener.Search(strategy)
+  symbols = search.symbols()
+  print(" ".join(symbols))
 
 
 """
-  watch
+  stream
   ------
 """
-def watch_cmd(args):
-    logger.debug('pytrader watch')
-    logger.debug(args)
+def stream_cmd(args):
+  logger.debug('pytrader stream')
+  logger.debug(args)
+
+  ws = AlpacaStream()
+  ws.set_tickers(args.tickers)
+  ws.run()
 
 
 """
@@ -398,29 +401,29 @@ def watch_cmd(args):
   display version information
 """
 def version_cmd(args):
-    logger.debug('pytrader version')
-    logger.debug(args)
+  logger.debug('pytrader version')
+  logger.debug(args)
 
-    _version_re = re.compile(r'__version__\s+=\s+(.*)')
-    with open('pytrader/__init__.py', 'rb') as f:
-        version = str(ast.literal_eval(_version_re.search(
-            f.read().decode('utf-8')).group(1)))
-    print(f'pytrader library version {version}')
+  _version_re = re.compile(r'__version__\s+=\s+(.*)')
+  with open('pytrader/__init__.py', 'rb') as f:
+      version = str(ast.literal_eval(_version_re.search(
+          f.read().decode('utf-8')).group(1)))
+  print(f'pytrader library version {version}')
 
 
 def main(args):
   try:
     subcommands = {
-        'assets' : assets_cmd,
-        'crontab' : crontab_cmd,
-        'backtest' : backtest_cmd,
-        'bars' : bars_cmd,
-        'download' : download_cmd,
-        'etfholdings' : etfholdings_cmd,
-        'mentions' : mentions_cmd,
-        'screener' : screener_cmd,
-        'watch' : watch_cmd,
-        'version' : version_cmd,
+      'assets' : assets_cmd,
+      'crontab' : crontab_cmd,
+      'backtest' : backtest_cmd,
+      'bars' : bars_cmd,
+      'download' : download_cmd,
+      'etfholdings' : etfholdings_cmd,
+      'mentions' : mentions_cmd,
+      'screener' : screener_cmd,
+      'stream' : stream_cmd,
+      'version' : version_cmd,
     }
     subcommands[args.subcommand](args)
 
@@ -464,7 +467,8 @@ if __name__ == '__main__':
   screener_parser = subparsers.add_parser('screener')
   screener_parser.add_argument('-s', '--strategy', default='s&p500', help="the strategy filter to use for the screener" )
 
-  watch_parser = subparsers.add_parser('watch')
+  stream_parser = subparsers.add_parser('stream')
+  stream_parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
 
   screener_parser = subparsers.add_parser('version')
 

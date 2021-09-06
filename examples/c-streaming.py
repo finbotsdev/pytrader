@@ -1,7 +1,5 @@
 # encoding: utf-8
 
-import config as cfg
-import json
 import pytrader as pt
 from pytrader.data.alpaca import AlpacaStream
 from pytrader.log import logger
@@ -21,7 +19,6 @@ def main(args):
 
     ws = AlpacaStream()
     ws.set_tickers(args.tickers)
-    print(ws)
     ws.run()
 
   except Exception as e:
