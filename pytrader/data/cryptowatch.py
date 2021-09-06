@@ -179,11 +179,9 @@ class CryptowatchStream():
 
 
   def run(self):
-    data_domain = self.DATA_URL.replace("https://","")
+    data_domain = self.URL.replace("https://","")
     endpoint = f"wss://{data_domain}/connect?apikey={self.KEY_ID}"
-    print(endpoint)
     ws = websocket.WebSocketApp(endpoint, on_open=self.on_open, on_message=self.on_message)
-    print(ws)
     ws.run_forever()
 
   def __repr__(self):

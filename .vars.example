@@ -40,6 +40,8 @@ export IEX_API_SECRET_KEY=Tsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 export IEX_API_DATA_URL=https://sandbox.iexapis.com
 export IEX_API_VERSION=v1
 
+export PYTRADER_LOG_PATH=~/pytrader_logs
+
 # smtp config
 export SMTP_HOST='smtp.gmail.com'
 export SMTP_PASS=xxxxxxxxxxxxxxxxxxxxxxxx

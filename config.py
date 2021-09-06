@@ -17,8 +17,6 @@ MAX_THREADS = 10 # max threads at a time
 ################################################################ PATHS ->
 home = str(Path.home())
 
-FILES_PATH = home + '/pytrader_files'
-
 class Config(object):
    DEBUG=False
    TESTING=False

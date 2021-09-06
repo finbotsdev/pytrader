@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-import config
+import pytrader.config as cfg
 from datetime import datetime
 import os
 import logging
@@ -63,7 +63,7 @@ def config_root_logger():
 
 def create_log_folder():
     path = os.path.join(
-      config.FILES_PATH,
+      cfg.get('PYTRADER_LOG_PATH'),
       log_date,
       log_time
     )
@@ -76,7 +76,7 @@ def start_thread_logging():
     Add a log handler to separate file for current thread
     """
     thread_name = threading.Thread.getName(threading.current_thread())
-    log_path = create_log_folder(config.FILES_PATH)
+    log_path = create_log_folder(cfg.get('PYTRADER_LOG_PATH'))
     log_file = f'{log_path}/perThreadLogging-{thread_name}.log'
     log_handler = logging.FileHandler(log_file)
 
