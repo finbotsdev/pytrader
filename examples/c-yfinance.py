@@ -3,6 +3,7 @@
 import pytrader as pt
 from pytrader.data import YahooFinance
 from pytrader.log import logger
+import traceback
 
 
 """

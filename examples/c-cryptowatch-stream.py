@@ -3,7 +3,7 @@
 import pytrader as pt
 from pytrader.data.cryptowatch import CryptowatchStream
 from pytrader.log import logger
-
+import traceback
 
 """
 c-cryptowatch-stream.py
@@ -23,8 +23,8 @@ def main(args):
 
   except Exception as e:
     logger.error(e)
+    print(e)
     print(traceback.format_exc())
-    pass
 
 
 if __name__ == '__main__':

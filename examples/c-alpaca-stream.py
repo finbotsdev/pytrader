@@ -3,6 +3,7 @@
 import pytrader as pt
 from pytrader.data.alpaca import AlpacaStream
 from pytrader.log import logger
+import traceback
 
 
 """
@@ -23,7 +24,8 @@ def main(args):
 
   except Exception as e:
     logger.error(e)
-    pass
+    print(e)
+    print(traceback.format_exc())
 
 
 if __name__ == '__main__':

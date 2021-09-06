@@ -2,6 +2,7 @@
 
 import pytrader as pt
 from pytrader.log import logger
+import traceback
 
 
 """

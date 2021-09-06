@@ -1,7 +1,7 @@
 import pytrader as pt
 from pytrader.data import Cryptowatch
 from pytrader.log import logger
-
+import traceback
 
 """
 c-cryptowatch.py
