@@ -1,15 +1,15 @@
 # encoding: utf-8
 
-import os
+import pytrader.config as cfg
 import requests
 
 class IEXCloud:
 
     def __init__(self, symbol):
-        self.URL = os.environ.get('IEX_API_DATA_URL')
-        self.KEY_ID = os.environ.get('IEX_API_KEY_ID')
-        self.SECRET_KEY = os.environ.get('IEX_API_SECRET_KEY')
-        self.VERSION = os.environ.get('IEX_API_VERSION')
+        self.URL = cfg.get('IEX_API_DATA_URL')
+        self.KEY_ID = cfg.get('IEX_API_KEY_ID')
+        self.SECRET_KEY = cfg.get('IEX_API_SECRET_KEY')
+        self.VERSION = cfg.get('IEX_API_VERSION')
         self.symbol = symbol
 
 

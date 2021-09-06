@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 import json
-import os
+import pytrader.config as cfg
 import requests
 import time
 import websocket
@@ -9,11 +9,11 @@ import websocket
 class AlpacaMarkets():
 
     def __init__(self):
-        self.BASE_URL = os.environ.get('APCA_API_BASE_URL')
-        self.DATA_URL = os.environ.get('APCA_API_DATA_URL')
-        self.KEY_ID = os.environ.get('APCA_API_KEY_ID')
-        self.SECRET_KEY = os.environ.get('APCA_API_SECRET_KEY')
-        self.VERSION = os.environ.get('APCA_API_VERSION')
+        self.BASE_URL = cfg.get('APCA_API_BASE_URL')
+        self.DATA_URL = cfg.get('APCA_API_DATA_URL')
+        self.KEY_ID = cfg.get('APCA_API_KEY_ID')
+        self.SECRET_KEY = cfg.get('APCA_API_SECRET_KEY')
+        self.VERSION = cfg.get('APCA_API_VERSION')
 
         self.auth_header = {
           "APCA-API-KEY-ID": self.KEY_ID,
@@ -149,10 +149,10 @@ class AlpacaMarkets():
 
 class AlpacaStream():
   def __init__(self):
-    self.DATA_URL = os.environ.get('APCA_API_DATA_URL')
-    self.KEY_ID = os.environ.get('APCA_API_KEY_ID')
-    self.SECRET_KEY = os.environ.get('APCA_API_SECRET_KEY')
-    self.VERSION = os.environ.get('APCA_API_VERSION')
+    self.DATA_URL = cfg.get('APCA_API_DATA_URL')
+    self.KEY_ID = cfg.get('APCA_API_KEY_ID')
+    self.SECRET_KEY = cfg.get('APCA_API_SECRET_KEY')
+    self.VERSION = cfg.get('APCA_API_VERSION')
 
   def set_tickers(self, tickers: list):
     self.TICKERS = tickers

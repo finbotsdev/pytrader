@@ -1,13 +1,10 @@
 # encoding: utf-8
 
 import backtrader as bt
-import config
 import pytrader as pt
 from pytrader.backtest import cli_options_parser, feed
 from pytrader.log import logger
 import datetime
-import os
-import sys
 
 
 """

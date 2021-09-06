@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-import config as cfg
 import pytrader as pt
 from pytrader.log import logger
 from pytrader.event import notify_email
