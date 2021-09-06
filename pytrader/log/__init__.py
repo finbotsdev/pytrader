@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import config
 from datetime import datetime
 import os

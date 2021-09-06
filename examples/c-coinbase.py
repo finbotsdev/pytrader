@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import ccxt
 import os
 import pandas as pd

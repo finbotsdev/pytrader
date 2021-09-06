@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, date
 import pytrader.log as log

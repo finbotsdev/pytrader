@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import config as cfg
 import smtplib
 import ssl

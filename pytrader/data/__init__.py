@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from .alpaca import AlpacaMarkets
 from .iex import IEXCloud
 from .yahoo import YahooFinance

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import pytrader as pt
 import pytrader.log as log
 import redis

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import csv
 
 # Real comments are more complicated ...

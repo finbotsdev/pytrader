@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import yfinance as yf
 import logging
 

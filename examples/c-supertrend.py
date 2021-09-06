@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import ccxt
 import pandas as pd
 import schedule

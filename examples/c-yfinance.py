@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import config as cfg
 import pytrader as pt
 from pytrader.data import YahooFinance

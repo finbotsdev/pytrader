@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import config as cfg
 from datetime import datetime, date, time
 from psaw import PushshiftAPI

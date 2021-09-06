@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from .hello import Hello  # noqa
 import argparse
 from pytrader.log import logger

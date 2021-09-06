@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import backtrader as bt
 import config
 import pytrader as pt

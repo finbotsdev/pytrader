@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import config
 import sqlalchemy
 from sqlalchemy import exc
