@@ -1,7 +1,10 @@
 # encoding: utf-8
 
+import json
 import os
 import requests
+import time
+import websocket
 
 class AlpacaMarkets():
 
@@ -144,3 +147,48 @@ class AlpacaMarkets():
     # DELETE/v2/watchlists/{watchlist_id}/{symbol}
     # POST/v2/watchlists
 
+class AlpacaStream():
+  def __init__(self):
+    self.DATA_URL = os.environ.get('APCA_API_DATA_URL')
+    self.KEY_ID = os.environ.get('APCA_API_KEY_ID')
+    self.SECRET_KEY = os.environ.get('APCA_API_SECRET_KEY')
+    self.VERSION = os.environ.get('APCA_API_VERSION')
+
+  def set_tickers(self, tickers: list):
+    self.TICKERS = tickers
+
+  def auth(self, ws):
+    auth = {
+      "action": "auth",
+      "key": self.KEY_ID,
+      "secret": self.SECRET_KEY
+    }
+    ws.send(json.dumps(auth))
+
+  def subscribe(self, ws):
+    message = {
+      "action": "subscribe",
+      "bars": ['*'],
+      "dailyBars": ['*'],
+      "lulds": ['*'],
+      "quotes": self.TICKERS,
+      "statuses": ['*'],
+      "trades": self.TICKERS
+    }
+    ws.send(json.dumps(message))
+
+  def on_open(self, ws):
+    self.auth(ws)
+    self.subscribe(ws)
+
+  def on_message(self, ws, message):
+    print(message)
+
+  def run(self):
+    data_domain = self.DATA_URL.replace("https://","")
+    endpoint = f"wss://stream.{data_domain}/v2/iex"
+    ws = websocket.WebSocketApp(endpoint, on_open=self.on_open, on_message=self.on_message)
+    ws.run_forever()
+
+  def __repr__(self):
+      return f'<AlpacaStream (tickers={self.TICKERS})>'
