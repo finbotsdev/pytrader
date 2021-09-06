@@ -95,7 +95,7 @@ def assets_cmd(_):
 def backtest_cmd(args):
   logger.debug('pytrader backtest')
   logger.debug(args)
-  os.system(f'python strategies/{args.strategy}.py')
+  os.system(f'python backtests/{args.strategy}.py')
 
 
 """
