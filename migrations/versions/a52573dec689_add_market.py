@@ -21,11 +21,11 @@ def upgrade():
       'market',
       sa.Column('id', sa.Integer, primary_key=True),
       sa.Column('coinwatch_id', sa.Integer),
-      sa.Column('exchange_id', sa.Integer, sa.ForeignKey('exchange.id')),
-      sa.Column('pair_id', sa.Integer, sa.ForeignKey('currency_pair.id')),
+      sa.Column('exchange', sa.Unicode(30)),
+      sa.Column('pair', sa.Unicode(100)),
       sa.Column('active', sa.Boolean),
   )
-  op.create_unique_constraint('uix_market', 'market', columns=['exchange_id', 'pair_id'])
+  op.create_unique_constraint('uix_market', 'market', columns=['exchange', 'pair'])
 
 def downgrade():
   op.drop_table('market')

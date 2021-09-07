@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import relationship
 
 class Exchange(Base):
-    __tablename__ = 'asset'
+    __tablename__ = 'exchange'
 
     id = sa.Column(sa.Integer, primary_key=True)
     coinwatch_id = sa.Column(sa.Integer)

@@ -3,13 +3,13 @@ import sqlalchemy as sa
 from sqlalchemy.orm import relationship
 
 class CurrencyPair(Base):
-    __tablename__ = 'asset'
+    __tablename__ = 'currency_pair'
 
     id = sa.Column(sa.Integer, primary_key=True)
     coinwatch_id = sa.Column(sa.Integer)
-    base_id = sa.Column(sa.Integer)
-    quote_id = sa.Column(sa.Integer)
-    symbol = sa.Column(sa.Unicode(20))
+    base = sa.Column(sa.Unicode(20))
+    quote = sa.Column(sa.Unicode(20))
+    symbol = sa.Column(sa.Unicode(100))
 
     def __repr__(self):
         return f'<CurrencyPair (id={self.id}, symbol={self.symbol})>'

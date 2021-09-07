@@ -22,7 +22,7 @@ def upgrade():
       sa.Column('id', sa.Integer, primary_key=True),
       sa.Column('coinwatch_id', sa.Integer),
       sa.Column('name', sa.Unicode(255)),
-      sa.Column('symbol', sa.Unicode(20)),
+      sa.Column('symbol', sa.Unicode(30)),
       sa.Column('active', sa.Boolean),
   )
   op.create_unique_constraint('uix_exchange', 'exchange', columns=['symbol'])

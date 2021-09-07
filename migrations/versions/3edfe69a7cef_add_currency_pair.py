@@ -21,9 +21,9 @@ def upgrade():
       'currency_pair',
       sa.Column('id', sa.Integer, primary_key=True),
       sa.Column('coinwatch_id', sa.Integer),
-      sa.Column('base', sa.Unicode(20)),
-      sa.Column('quote', sa.Unicode(20)),
-      sa.Column('symbol', sa.Unicode(20)),
+      sa.Column('base', sa.Unicode(30)),
+      sa.Column('quote', sa.Unicode(30)),
+      sa.Column('symbol', sa.Unicode(100)),
   )
   op.create_unique_constraint('uix_currency_pair', 'currency_pair', columns=['symbol'])
 
