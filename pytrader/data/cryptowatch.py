@@ -8,6 +8,16 @@ import requests
 import websocket
 import traceback
 
+"""
+this api charges about $1.2 per gigabyte of data streamed
+this stream sends nearly 200 messages per minute
+multiple updates of many different time intervals
+in the on_message function above we ignore most of what is being sent
+for a stream where we pay based on data sent
+this is not optimal
+at this rate polling might be cheaper
+"""
+
 class Cryptowatch():
 
   def __init__(self):
@@ -106,7 +116,6 @@ class Cryptowatch():
   def get_market_ohlc(self, exchange, pair,):
     return self.get(f"markets/{exchange}/{pair}/ohlc")
 
-
 class CryptowatchStream():
 
   def __init__(self):
@@ -191,14 +200,6 @@ class CryptowatchStream():
       print(e)
       print(message)
       print(traceback.format_exc())
-
-    # this api charges about $1.2 per gigabyte of data streamed
-    # this stream sends nearly 200 messages per minute
-    # multiple updates of many different time intervals
-    # in the on_message function above we ignore most of what is being sent
-    # for a stream where we pay based on data sent
-    # this is not optimal
-    # at this rate polling might be cheaper
 
     # {
     #   "marketUpdate":{
