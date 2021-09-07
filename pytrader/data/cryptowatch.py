@@ -1,9 +1,12 @@
 # encoding: utf-8
 
+from datetime import datetime
 import json
 import pytrader.config as cfg
+from pytrader.log import logger
 import requests
 import websocket
+import traceback
 
 class Cryptowatch():
 
@@ -111,13 +114,29 @@ class CryptowatchStream():
     self.KEY_ID = cfg.get('CRYPTOWATCH_API_KEY_ID')
     self.SECRET_KEY = cfg.get('CRYPTOWATCH_API_SECRET_KEY')
     self.VERSION = cfg.get('CRYPTOWATCH_API_VERSION')
+    self.last_close = {}
+    self.message_count = 0
+
+  def cache_market_price(self, mid, dt, o, h, l, c, v):
+    self.last_close[mid] = {
+      'dt': dt,
+      'open': o,
+      'high': h,
+      'low': l,
+      'close': c,
+      'volume': v
+    }
+    for market in self.last_close:
+      logger.info(self.last_close[market])
+
+    logger.info(f'{self.message_count} messages received')
 
   def subscribe(self, ws):
     message = {
       "subscribe": {
         "subscriptions": [
-          { "streamSubscription": { "resource": "pairs:9:ohlc" } },
-          { "streamSubscription": { "resource": "pairs:125:ohlc" } }
+          # { "streamSubscription": { "resource": "markets:65:ohlc" } },
+          { "streamSubscription": { "resource": "markets:68:ohlc" } }
         ]
       }
     }
@@ -127,7 +146,59 @@ class CryptowatchStream():
     self.subscribe(ws)
 
   def on_message(self, ws, message):
-    print(message)
+    self.message_count += 1
+    try:
+      msg_json = json.loads(message.decode('utf-8'))
+
+      if 'hb' in msg_json:
+        return # ignore heartbeat message
+
+      if 'marketUpdate' in msg_json:
+        marketUpdate = msg_json['marketUpdate']
+        intervalsUpdate = marketUpdate['intervalsUpdate']
+
+        mkt = marketUpdate['market']
+        exchange = mkt['exchangeId']
+        pair = mkt['currencyPairId']
+        market = mkt['marketId']
+
+        intervals = intervalsUpdate['intervals']
+        for interval in intervals:
+          opentime = int(interval['opentime'])
+          closetime = int(interval['closetime'])
+          ot = datetime.fromtimestamp(opentime)
+          ct = datetime.fromtimestamp(closetime)
+          periodName = interval['periodName']
+          ohlc = interval['ohlc']
+          o = ohlc['openStr']
+          h = ohlc['highStr']
+          l = ohlc['lowStr']
+          c = ohlc['closeStr']
+          v = interval['volumeBaseStr']
+
+          if periodName == '60': # pay attention to minute data
+            if not market in self.last_close:
+              self.cache_market_price(market,ct,o,h,l,c,v)
+
+            if not self.last_close[market]['dt'] == ct:
+              self.cache_market_price(market,ct,o,h,l,c,v)
+
+      else:
+        print(message)
+
+    except Exception as e:
+      print(e)
+      print(e)
+      print(message)
+      print(traceback.format_exc())
+
+    # this api charges about $1.2 per gigabyte of data streamed
+    # this stream sends nearly 200 messages per minute
+    # multiple updates of many different time intervals
+    # in the on_message function above we ignore most of what is being sent
+    # for a stream where we pay based on data sent
+    # this is not optimal
+    # at this rate polling might be cheaper
 
     # {
     #   "marketUpdate":{
@@ -141,11 +212,7 @@ class CryptowatchStream():
     #         {
     #           "opentime":"1630886400",
     #           "closetime":"1631145600",
-    #           "ohlc":{
-    #             "openStr":"51678.7",
-    #             "highStr":"52181.73",
-    #             "lowStr":"50885.1",
-    #             "closeStr":"51617.65"
+    #           "ohlc":{"openStr":"51678.7","highStr":"52181.73","lowStr":"50885.1","closeStr":"51617.65"
     #           },
     #           "volumeBaseStr":"41.7458315",
     #           "volumeQuoteStr":"2154780.6992795982",
@@ -154,11 +221,7 @@ class CryptowatchStream():
     #         {
     #           "opentime":"1630540800",
     #           "closetime":"1631145600",
-    #           "ohlc":{
-    #             "openStr":"48885.23",
-    #             "highStr":"52181.73",
-    #             "lowStr":"48383.88",
-    #             "closeStr":"51617.65"
+    #           "ohlc":{"openStr":"48885.23","highStr":"52181.73","lowStr":"48383.88","closeStr":"51617.65"
     #           },
     #           "volumeBaseStr":"239.87955476",
     #           "volumeQuoteStr":"12048774.4656522032",
@@ -176,7 +239,6 @@ class CryptowatchStream():
     #     }
     #   }
     # }
-
 
   def run(self):
     data_domain = self.URL.replace("https://","")
