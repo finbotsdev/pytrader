@@ -2,6 +2,7 @@
 
 import json
 import pytrader.config as cfg
+from pytrader.log import logger
 import requests
 import time
 import websocket
@@ -182,7 +183,7 @@ class AlpacaStream():
     self.subscribe(ws)
 
   def on_message(self, ws, message):
-    print(message)
+    logger.info(message)
 
   def run(self):
     data_domain = self.DATA_URL.replace("https://","")
