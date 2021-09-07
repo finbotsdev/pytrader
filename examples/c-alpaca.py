@@ -2,12 +2,12 @@
 
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, date
-import pytrader.log as logger
+from pytrader.log import logger
 import traceback
 
 
 """
-c-hello.py
+c-alpaca.py
 ---------------------
 pytrader function template
 """
