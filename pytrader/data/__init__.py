@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 from .alpaca import AlpacaMarkets, AlpacaStream
+from .coinbase_pro import CoinbasePro, CoinbaseProStream
 from .cryptowatch import Cryptowatch, CryptowatchStream
 from datetime import datetime
 from .iex import IEXCloud

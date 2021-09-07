@@ -15,6 +15,8 @@ export DATA_PROXY_WS
 export COINBASEPRO_API_KEY_ID=365664e43a16374bb474b77f3014b512
 export COINBASEPRO_API_SECRET_KEY=E1pkM+7x8LWUf6F20+R61edoTtFU2aqSQYR1BszZIlp9czx+JE/VF5iEdZjqQU0+lyvImTEM2MtillqNlE7kPg==
 export COINBASEPRO_API_PASSWORD=xxxxxxxxxx
+export COINBASEPRO_API_URL=https://api.pro.coinbase.com
+export COINBASEPRO_API_STREAM=wss://ws-feed.pro.coinbase.com
 
 # cryptowatch
 export CRYPTOWATCH_API_KEY_ID=xxxxxxxxxxxxxxxxx
