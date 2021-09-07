@@ -140,29 +140,29 @@ def crontab_cmd(_):
   # remove all pytrader cron jobs
   cron.remove_all(comment='pytrader')
 
-  # sync assets at 8:00 pm
+  # sync assets at 8:05 pm
   comment = f'pytrader'
   cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r stock'
   job = cron.new(command=cmd, comment=comment)
   job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(21)
-  job.minute.on(0)
+  job.hour.every(20)
+  job.minute.on(5)
 
   # sync etf holdings at 8:05 pm
   comment = f'pytrader'
   cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r etfholding'
   job = cron.new(command=cmd, comment=comment)
   job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(21)
-  job.minute.on(5)
+  job.hour.every(20)
+  job.minute.on(10)
 
   # sync prices daily at 8:10 pm
   comment = f'pytrader'
   cmd = f'cd {cwd}; ./cronjob ./pytrade bars'
   job = cron.new(command=cmd, comment=comment)
   job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(21)
-  job.minute.on(10)
+  job.hour.every(20)
+  job.minute.on(15)
 
   # sync redit mentions every hour
   comment = f'pytrader'
