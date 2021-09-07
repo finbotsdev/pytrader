@@ -8,20 +8,16 @@ import datetime as dt
 import getpass
 import os
 import pytrader as pt
-from pytrader.csv import is_comment, is_whitespace, read_and_filter_csv
-from pytrader.data import AlpacaMarkets, AlpacaStream, date
-from pytrader.data import YahooFinance
+from pytrader.data import AlpacaMarkets, AlpacaStream, YahooFinance, date
 from pytrader.log import logger
 import pytrader.screener as screener
 import re
-import requests
 import sqlalchemy as sa
 from sqlalchemy import exc
 import traceback
 
 from model import Session
 from model.asset import Asset
-from model.etf_holding import EtfHolding
 from model.price import Price
 
 
@@ -30,60 +26,6 @@ from model.price import Price
   ------
   a cli interface to pytrader
 """
-
-
-"""
-  assets
-  ------
-  maintain asset table in the database
-"""
-def assets_cmd(_):
-  logger.debug('pytrader assets')
-  logger.debug(args)
-
-  api = AlpacaMarkets()
-  session = Session()
-
-  logger.info('get assets list from exchange')
-  assets = api.get_assets()
-
-  for a in assets:
-    asset = session.query(Asset).filter(
-      Asset.symbol == a['symbol'],
-      Asset.exchange == a['exchange']).first()
-
-    if not asset:
-      logger.info(f"create record {a['symbol']} - {a['name']}")
-      asset = Asset(
-        company=a['name'],
-        asset_class=a['class'],
-        exchange=a['exchange'],
-        is_easy_to_borrow=a['easy_to_borrow'],
-        is_etf=False,
-        is_fractionable=a['fractionable'],
-        is_marginable=a['marginable'],
-        is_shortable=a['shortable'],
-        is_tradeable=a['tradable'],
-        status=a['status'],
-        symbol=a['symbol'])
-      session.add(asset)
-    else:
-      logger.info(f"update record {a['symbol']} - {a['name']}")
-      asset.company=a['name']
-      asset.asset_class=a['class']
-      asset.exchange=a['exchange']
-      asset.is_easy_to_borrow=a['easy_to_borrow']
-      asset.is_fractionable=a['fractionable']
-      asset.is_marginable=a['marginable']
-      asset.is_shortable=a['shortable']
-      asset.is_tradeable=a['tradable']
-      asset.status=a['status']
-      asset.symbol=a['symbol']
-
-    session.commit()
-
-  num_assets = session.query(Asset).count()
-  logger.info(f"{num_assets} asset records exist in the database")
 
 
 """
@@ -100,12 +42,14 @@ def backtest_cmd(args):
 """
   bars
   ------
+
 """
 def get_chunk_bars(symbol, end, start):
   logger.debug(f'fetch_range_bars {symbol}: {type(symbol)} {end}: {type(end)} {start}: {type(start)}')
   # convert string dates to datetime objects
-  dstart = dt.datetime.strptime(date(start), '%Y-%m-%d')
-  dend = dt.datetime.strptime(date(end), '%Y-%m-%d')
+
+  fds, dstart = date(start)
+  eds, dend = date(end)
   # get count of days between start and end date
   days_remaining = abs(dend-dstart).days
 
@@ -118,16 +62,16 @@ def get_chunk_bars(symbol, end, start):
     end = days_remaining -7
     days_remaining = days_remaining - 8
 
-    start_date = date(f'{start} days ago')
-    end_date = date(f'{end} days ago')
+    sds, dstart = date(f'{start} days ago')
+    eds, dend = date(f'{end} days ago')
 
-    result = api.get_bars(symbol, end=date(end_date), start=date(start_date), timeframe='1Min', limit=10000)
+    result = api.get_bars(symbol, end=eds, start=sds, timeframe='1Min', limit=10000)
     if result and result['bars']:
       count = len(result['bars'])
       res = result['bars']
     else:
       res = []
-    logger.info(f'{symbol} - {start_date} to {end_date} - {len(res)} bars returned')
+    logger.info(f'{symbol} - {sds} to {eds} - {len(res)} bars returned')
 
     bars.extend(res)
 
@@ -198,18 +142,18 @@ def crontab_cmd(_):
 
   # sync assets at 8:00 pm
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob ./pytrade assets'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r stock'
   job = cron.new(command=cmd, comment=comment)
   job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(20)
+  job.hour.every(21)
   job.minute.on(0)
 
   # sync etf holdings at 8:05 pm
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob ./pytrade etfholdings'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r etfholding'
   job = cron.new(command=cmd, comment=comment)
   job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(20)
+  job.hour.every(21)
   job.minute.on(5)
 
   # sync prices daily at 8:10 pm
@@ -217,12 +161,12 @@ def crontab_cmd(_):
   cmd = f'cd {cwd}; ./cronjob ./pytrade bars'
   job = cron.new(command=cmd, comment=comment)
   job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(20)
+  job.hour.every(21)
   job.minute.on(10)
 
   # sync redit mentions every hour
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob ./pytrade mentions'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r wallstreetbets'
   job = cron.new(command=cmd, comment=comment)
   job.hour.every(1)
   job.minute.on(0)
@@ -273,95 +217,6 @@ def download_cmd(args):
 
 
 """
-  etf holdings
-  ------
-  grab lists of holdings from various etfs
-  maintain a local db of etf holdings so that we can observe changes over time
-"""
-def etfholdings_cmd(args):
-  logger.debug('pytrader etf')
-  logger.debug(args)
-
-  session = Session()
-
-  feeds = {
-    "ARKK": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_INNOVATION_ETF_ARKK_HOLDINGS.csv",
-    "ARKQ": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_AUTONOMOUS_TECHNOLOGY_&_ROBOTICS_ETF_ARKQ_HOLDINGS.csv",
-    "ARKW": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_NEXT_GENERATION_INTERNET_ETF_ARKW_HOLDINGS.csv",
-    "ARKG": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_GENOMIC_REVOLUTION_MULTISECTOR_ETF_ARKG_HOLDINGS.csv",
-    "ARKF": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_FINTECH_INNOVATION_ETF_ARKF_HOLDINGS.csv",
-    "ARKX": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_SPACE_EXPLORATION_&_INNOVATION_ETF_ARKX_HOLDINGS.csv",
-    "IZRL": "https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_ISRAEL_INNOVATIVE_TECHNOLOGY_ETF_IZRL_HOLDINGS.csv",
-    "PRNT": "https://ark-funds.com/wp-content/fundsiteliterature/csv/THE_3D_PRINTING_ETF_PRNT_HOLDINGS.csv",
-  }
-
-  today = dt.date.today().strftime('%Y-%m-%d')
-  etf_symbols = [key for key in feeds]
-
-  for asset in session.query(Asset).filter(Asset.symbol.in_(etf_symbols)):
-    asset.is_etf = True
-  session.commit()
-
-  for etf in session.query(Asset).filter(Asset.is_etf == True):
-    logger.info(f"Download Holdings Report for {etf.company} ({etf.symbol})")
-
-    # create directory to store download files
-    dirname = os.path.dirname(__file__)
-    filepath = os.path.join(dirname, '.data', 'holdings', today)
-    os.path.dirname(__file__)
-    os.makedirs(filepath, exist_ok=True)
-
-    # download updated csv file for fund
-    if etf.symbol in feeds.keys():
-      url = feeds[etf.symbol]
-      logger.info(f"    {url}")
-
-      hfile = f"{filepath}/ETF_{etf.symbol}_HOLDINGS.csv"
-
-      headers = {
-        'User-Agent': 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
-      }
-
-      with requests.get(url, headers=headers, stream=True) as r:
-        r.raise_for_status()
-        with open(hfile, 'wb') as f:
-          for chunk in r.iter_content(chunk_size=8192):
-            f.write(chunk)
-
-      try:
-        for l in read_and_filter_csv(hfile, is_comment, is_whitespace):
-          if l['date'] and l['ticker'] and l['shares'] and l['weight(%)']:
-            holding = session.query(Asset).filter(Asset.symbol == l['ticker']).first()
-            if holding:
-              logger.info(f"    {etf.symbol} holds {l['shares']} shares of {holding.symbol} which is {l['weight(%)']}% of their holdings")
-              eft_holding = EtfHolding(
-                etf_id=etf.id,
-                holding_id=holding.id,
-                dt=l['date'],
-                shares=l['shares'],
-                weight=l['weight(%)'],
-              )
-              session.add(eft_holding)
-        session.commit()
-      except Exception as e:
-        session.rollback()
-        logger.error(e)
-        print(e)
-
-    else:
-        logger.info(f"{etf.symbol} does not exist in feeds dict")
-
-"""
-  mentions
-  ------
-"""
-def mentions_cmd(args):
-  logger.debug('pytrader mention')
-  logger.debug(args)
-  os.system(f'python mentions/{args.strategy}.py')
-
-
-"""
   screener
   ------
   query symbols to watch using stored procedure queries
@@ -396,6 +251,17 @@ def stream_cmd(args):
 
 
 """
+  sync
+  ------
+
+"""
+def sync_cmd(_):
+  logger.debug('pytrader assets')
+  logger.debug(args)
+  os.system(f'python sync/{args.resource}.py')
+
+
+"""
   version
   ------
   display version information
@@ -414,15 +280,13 @@ def version_cmd(args):
 def main(args):
   try:
     subcommands = {
-      'assets' : assets_cmd,
       'crontab' : crontab_cmd,
       'backtest' : backtest_cmd,
       'bars' : bars_cmd,
       'download' : download_cmd,
-      'etfholdings' : etfholdings_cmd,
-      'mentions' : mentions_cmd,
       'screener' : screener_cmd,
       'stream' : stream_cmd,
+      'sync' : sync_cmd,
       'version' : version_cmd,
     }
     subcommands[args.subcommand](args)
@@ -439,8 +303,6 @@ if __name__ == '__main__':
 
   subparsers = parser.add_subparsers(dest="subcommand") # this line changed
   subparsers.required = True
-
-  assets_parser = subparsers.add_parser('assets')
 
   mention_parser = subparsers.add_parser('backtest')
   mention_parser.add_argument('-s', '--strategy', default='openbreakout', help="the strategy" )
@@ -461,14 +323,14 @@ if __name__ == '__main__':
 
   etf_parser = subparsers.add_parser('etfholdings')
 
-  mention_parser = subparsers.add_parser('mentions')
-  mention_parser.add_argument('-s', '--strategy', default='wallstreetbets', help="the strategy" )
-
   screener_parser = subparsers.add_parser('screener')
   screener_parser.add_argument('-s', '--strategy', default='s&p500', help="the strategy filter to use for the screener" )
 
   stream_parser = subparsers.add_parser('stream')
   stream_parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
+
+  sync_parser = subparsers.add_parser('sync')
+  sync_parser.add_argument('-r', '--resource', default='stock', help="resource type to sync" )
 
   screener_parser = subparsers.add_parser('version')
 
@@ -478,4 +340,3 @@ if __name__ == '__main__':
   logger.info('pytrader cli tool')
   main(args)
   timer.report()
-
