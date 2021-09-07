@@ -38,19 +38,11 @@ class CoinbasePro():
   def __init__(self):
     self.URL = cfg.get('COINBASEPRO_API_URL')
 
-  def _get(self, path):
-    url = f"{self.URL}/{path}"
-    r = requests.get(url)
-
-    if r.ok:
-      return r.json()
-    else:
-      print(r.status_code, r.reason, url)
-
   def get(self, path, **kwargs):
     params=[]
     for key, value in kwargs.items():
-      params.append(f"{key}={value}")
+      if value:
+        params.append(f"{key}={value}")
 
     url = f"{self.URL}/{path}"
 
@@ -68,51 +60,108 @@ class CoinbasePro():
 
   # GET /accounts
   def get_accounts(self):
-      return self.get(f"accounts")
-
+    return self.get(f"accounts")
   # GET /accounts/<account-id>
   # GET /accounts/<account-id>/ledger
   # GET /accounts/<account_id>/holds
+
   # GET /coinbase-accounts
   # POST /coinbase-accounts/<coinbase-account-id>/addresses
+
   # POST /conversions
+
   # GET /currencies
+  def get_currencies(self):
+    return self.get(f"currencies")
   # GET /currencies/<id>
+
   # POST /deposits/coinbase-account
   # POST /deposits/payment-method
+
   # GET /fees
+  def get_fees(self):
+    return self.get(f"fees")
+
   # GET /fills
+  def get_fills(self):
+    return self.get(f"fills")
+
   # GET /orders
+  def get_orders(self):
+    return self.get(f"orders")
   # GET /orders/<id>
   # GET /orders/client:<client_oid>
   # POST /orders
   # DELETE /orders
   # DELETE /orders/<id>
   # DELETE /orders/client:<client_oid>
+
   # GET /payment-methods
+  def get_payment_methods(self):
+    return self.get(f"payment-methods")
+
   # GET /products
+  def get_products(self):
+    return self.get(f"products")
   # GET /products/<product-id>
+  def get_product(self, product_id):
+    return self.get(f"products/{product_id}")
   # GET /products/<product-id>/book
+  def get_product_book(self, product_id):
+    return self.get(f"products/{product_id}/book")
   # GET /products/<product-id>/ticker
+  def get_product_ticker(self, product_id):
+    return self.get(f"products/{product_id}/ticker")
   # GET /products/<product-id>/trades
+  def get_product_trades(self, product_id):
+    return self.get(f"products/{product_id}/trades")
   # GET /products/<product-id>/candles
+  def get_product_candles(self, product_id, start=None, end=None, granularity=60):
+    """
+    :param start:	str - Start time in ISO 8601 (2021-09-07)
+    :param end:	str - End time in ISO 8601 (2021-09-07)
+    :param granularity:	int - Desired timeslice in seconds
+
+    If either one of the start or end fields are not provided then both fields will be ignored.
+    If a custom time range is not declared then one ending now is selected.
+
+    The maximum number of data points for a single request is 300 candles.
+    If your selection of start/end time and granularity will result in more than 300 data points,
+    your request will be rejected.
+
+    If you wish to retrieve fine granularity data over a larger time range,
+    you will need to make multiple requests with new start/end ranges.
+    """
+    return self.get(f"products/{product_id}/candles", start=start, end=end, granularity=granularity)
   # GET /products/<product-id>/stats
+  def get_product_stats(self, product_id):
+    return self.get(f"products/{product_id}/stats")
+
   # GET /profiles
+  def get_profiles(self):
+    return self.get(f"profiles")
   # GET /profiles/<profile_id>
   # POST /profiles/transfer
+
   # GET /reports
   def get_reports(self):
-      return self.get(f"reports")
-
+    return self.get(f"reports")
   # POST /reports
   # GET /reports/:report_id
+
   # GET /time
   def get_time(self):
-      return self._get(f"time")
+    return self.get(f"time")
 
   # GET /transfers
+  def get_transfers(self):
+    return self.get(f"transfers")
   # GET /transfers/:transfer_id
+
   # GET /users/self/exchange-limits
+  def get_exchange_limits(self):
+    return self.get(f"users/self/exchange-limits")
+
   # POST /withdrawals/coinbase-account
   # POST /withdrawals/crypto
   # GET /withdrawals/fee-estimate
