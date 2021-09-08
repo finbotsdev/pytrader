@@ -4,7 +4,7 @@ import backtrader as bt
 import os
 from model import Session
 from model.asset import Asset
-from model.price import Price
+from model.ohlcv import Ohlcv
 import pandas as pd
 import pytrader as pt
 from pytrader.data import date
@@ -44,19 +44,20 @@ def feed(source: str, symbol: str, start: str ='one year ago', end: str = 'yeste
       Asset.symbol == symbol).first()
 
     prices = session.query(
-      Price.dt.label('dt'),
-      Price.open.label('open'),
-      Price.high.label('high'),
-      Price.low.label('low'),
-      Price.close.label('close'),
-      Price.volume.label('volume')
+      Ohlcv.dt.label('dt'),
+      Ohlcv.open.label('open'),
+      Ohlcv.high.label('high'),
+      Ohlcv.low.label('low'),
+      Ohlcv.close.label('close'),
+      Ohlcv.volume.label('volume')
     ).filter(
-      Price.asset_id == asset.id,
-      Price.dt >= dt_start,
-      Price.dt <= dt_end,
-      text("price.dt::time >= make_time(9, 30, 0) "),
-      text("price.dt::time <= make_time(16, 0, 0)")
-    ).order_by(Price.dt.asc()).all()
+      Ohlcv.asset_id == asset.id,
+      Ohlcv.dt >= dt_start,
+      Ohlcv.dt <= dt_end,
+      text("ohlcv.dt::time >= make_time(9, 30, 0) "),
+      text("ohlcv.dt::time <= make_time(16, 0, 0)")
+    ).order_by(Ohlcv.dt.asc()).all()
+    print(prices)
 
     df = pd.DataFrame(prices)
     df.set_axis(['datetime', 'open', 'high', 'low', 'close', 'volume'], axis=1, inplace=True)
