@@ -19,7 +19,9 @@ def main(args):
   try:
     logger.info('get data from iex api')
 
-    api = IEXCloud('MSFT')
+    api = IEXCloud()
+
+    api.set_symbol('MSFT')
 
     logger.info('get_logo')
     print(api.get_logo())

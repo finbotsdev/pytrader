@@ -3,7 +3,7 @@
 from model import Session
 from model.exchange import Exchange
 import pytrader as pt
-from pytrader.data import Cryptowatch
+from pytrader.data import IEXCloud, Cryptowatch
 from pytrader.log import logger
 import traceback
 
@@ -20,9 +20,33 @@ def main(args):
 
   try:
     session = Session()
-    api = Cryptowatch()
 
-    result = api.get_exchanges()
+    api = IEXCloud()
+    exchanges = api.get_exchanges_us()
+    for e in exchanges:
+      exchange = session.query(Exchange).filter(
+        Exchange.symbol == e['mic']).first()
+
+      if not exchange:
+        logger.info(f"create record {e['mic']} - {e['name']} - {e['type']}")
+        exchange = Exchange(
+          name=e['name'],
+          symbol=e['mic'],
+          exchange_class=e['type'],
+          active=True)
+        print(exchange)
+        session.add(exchange)
+      else:
+        logger.info(f"update record {e['mic']} - {e['name']} - {e['type']}")
+        exchange.name=e['name']
+        exchange.symbol=e['mic']
+        exchange.exchange_class=e['type']
+
+    session.commit()
+
+    cwapi = Cryptowatch()
+    result = cwapi.get_exchanges()
+    print(result)
     exchanges = result['result']
 
     for e in exchanges:
@@ -32,17 +56,17 @@ def main(args):
       if not exchange:
         logger.info(f"create record {e['symbol']} - {e['name']}")
         exchange = Exchange(
-          coinwatch_id=e['id'],
           name=e['name'],
           symbol=e['symbol'],
-          active=e['active'])
+          active=e['active'],
+          exchange_class='digital')
         session.add(exchange)
       else:
         logger.info(f"update record {e['symbol']} - {e['name']}")
-        exchange.coinwatch_id=e['id']
         exchange.name=e['name']
         exchange.symbol=e['symbol']
-        exchange.symbol=e['symbol']
+        exchange.active=e['active']
+        exchange.exchange_class='digital'
 
       session.commit()
 

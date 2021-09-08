@@ -5,13 +5,11 @@ import requests
 
 class IEXCloud:
 
-    def __init__(self, symbol):
+    def __init__(self):
         self.URL = cfg.get('IEX_API_DATA_URL')
         self.KEY_ID = cfg.get('IEX_API_KEY_ID')
         self.SECRET_KEY = cfg.get('IEX_API_SECRET_KEY')
         self.VERSION = cfg.get('IEX_API_VERSION')
-        self.symbol = symbol
-
 
     def _request(self, path, **kwargs):
         paramstring=[f'token={self.KEY_ID}']
@@ -28,6 +26,8 @@ class IEXCloud:
         else:
           print(r.status_code, r.reason, url)
 
+    def set_symbol(self, symbol):
+      self.symbol = symbol
 
     def get_logo(self):
         return self._request(f"stock/{self.symbol}/logo")
@@ -37,6 +37,14 @@ class IEXCloud:
 
     def get_company_news(self, last=10):
         return self._request(f"stock/{self.symbol}/news/last/{last}")
+
+    # GET /ref-data/market/us/exchanges
+    def get_exchanges_us(self):
+        return self._request(f"ref-data/market/us/exchanges")
+
+    # GET /ref-data/exchanges
+    def get_exchanges_int(self):
+        return self._request(f"ref-data/exchanges")
 
     def get_dividends(self, range='5y'):
         return self._request(f"stock/{self.symbol}/dividends/{range}")

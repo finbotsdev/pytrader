@@ -18,7 +18,7 @@ import traceback
 
 from model import Session
 from model.asset import Asset
-from model.price import Price
+from model.ohlcv import Ohlcv
 
 
 """
@@ -98,8 +98,8 @@ def bars_cmd(args):
     bars = get_chunk_bars(asset.symbol, end=args.end, start=args.start)
     for b in bars:
       try:
-        logger.info(f"create price for {asset.symbol} {b['t']} ")
-        session.add(Price(
+        logger.info(f"create ohlcv for {asset.symbol} {b['t']} ")
+        session.add(Ohlcv(
           asset_id=asset.id,
           period='minute',
           dt=b['t'],
@@ -116,8 +116,8 @@ def bars_cmd(args):
         logger.error(e)
         print(e)
 
-  num_prices = session.query(Price).count()
-  logger.info(f"{num_prices} price records exist in the database")
+  num_prices = session.query(Ohlcv).count()
+  logger.info(f"{num_prices} ohlcv records exist in the database")
 
 
 """
@@ -140,36 +140,44 @@ def crontab_cmd(_):
   # remove all pytrader cron jobs
   cron.remove_all(comment='pytrader')
 
-  # sync assets at 8:05 pm
+  # sync exchanges at 6:05 am
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r stock'
-  job = cron.new(command=cmd, comment=comment)
-  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(20)
-  job.minute.on(5)
-
-  # sync etf holdings at 8:05 pm
-  comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r etfholding'
-  job = cron.new(command=cmd, comment=comment)
-  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(20)
-  job.minute.on(10)
-
-  # sync prices daily at 8:10 pm
-  comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob ./pytrade bars'
-  job = cron.new(command=cmd, comment=comment)
-  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  job.hour.every(20)
-  job.minute.on(15)
-
-  # sync redit mentions every hour
-  comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r wallstreetbets'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r exchanges'
   job = cron.new(command=cmd, comment=comment)
   job.hour.every(1)
-  job.minute.on(0)
+  job.hour.every(6)
+  job.minute.on(5)
+
+  # # sync assets at 8:05 pm
+  # comment = f'pytrader'
+  # cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r stock'
+  # job = cron.new(command=cmd, comment=comment)
+  # job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+  # job.hour.every(20)
+  # job.minute.on(5)
+
+  # # sync etf holdings at 8:05 pm
+  # comment = f'pytrader'
+  # cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r etfholding'
+  # job = cron.new(command=cmd, comment=comment)
+  # job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+  # job.hour.every(20)
+  # job.minute.on(10)
+
+  # # sync prices daily at 8:10 pm
+  # comment = f'pytrader'
+  # cmd = f'cd {cwd}; ./cronjob ./pytrade bars'
+  # job = cron.new(command=cmd, comment=comment)
+  # job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+  # job.hour.every(20)
+  # job.minute.on(15)
+
+  # # sync redit mentions every hour
+  # comment = f'pytrader'
+  # cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r wallstreetbets'
+  # job = cron.new(command=cmd, comment=comment)
+  # job.hour.every(1)
+  # job.minute.on(0)
 
   cron.write()
 
