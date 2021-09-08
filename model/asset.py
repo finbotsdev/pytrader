@@ -1,26 +1,20 @@
 from model import Base
-from model.etf_holding import EtfHolding
-from model.price import Price
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, Numeric, Table, Unicode
-from sqlalchemy.orm import relationship
+import sqlalchemy as sa
 
 class Asset(Base):
     __tablename__ = 'asset'
 
-    id = Column(Integer, primary_key=True)
-    company  = Column(Unicode(200))
-    asset_class = Column(Unicode(20))
-    exchange = Column(Unicode(10))
-    is_easy_to_borrow = Column(Boolean, default=False)
-    is_etf = Column(Boolean, default=False)
-    is_fractionable = Column(Boolean, default=False)
-    is_marginable = Column(Boolean, default=False)
-    is_shortable = Column(Boolean, default=False)
-    is_tradeable = Column(Boolean, default=False)
-    status = Column(Unicode(10))
-    symbol = Column(Unicode(10))
-
-    prices = relationship('Price', back_populates='asset')
+    id = sa.Column(sa.Integer, primary_key=True)
+    name  = sa.Column(sa.Unicode(255))
+    asset_class = sa.Column(sa.Unicode(30))
+    exchange_id = sa.Column(sa.Integer)
+    is_etf = sa.Column(sa.Boolean, default=False)
+    is_fractionable = sa.Column(sa.Boolean, default=False)
+    is_marginable = sa.Column(sa.Boolean, default=False)
+    is_shortable = sa.Column(sa.Boolean, default=False)
+    is_tradeable = sa.Column(sa.Boolean, default=False)
+    status = sa.Column(sa.Unicode(50))
+    symbol = sa.Column(sa.Unicode(50))
 
     def __repr__(self):
         return f'<Asset (id={self.id}, symbol={self.symbol})>'
