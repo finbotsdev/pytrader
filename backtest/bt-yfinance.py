@@ -11,6 +11,7 @@ import datetime
 backtrader strategy - hello world
 ---------------------
 a template for backtrader backtesting strategies
+using ohlcv data from yahoo finance
 
 """
 
@@ -46,7 +47,7 @@ def main(args):
     cerebro.addstrategy(Strategy)
     cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
 
-    data = feed(source='local', symbol=args.ticker, start=args.start, end=args.end)
+    data = feed(source='yfinance', symbol=args.ticker, start=args.start, end=args.end)
     print(f'data feed returned type {type(data)}')
     cerebro.adddata(data)
 
