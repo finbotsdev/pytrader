@@ -162,6 +162,10 @@ class CoinbasePro():
   def get_exchange_limits(self):
     return self.get(f"users/self/exchange-limits")
 
+  # GET /users/self/verify
+  def get_user_verify(self):
+    return self.get(f"users/self/verify")
+
   # POST /withdrawals/coinbase-account
   # POST /withdrawals/crypto
   # GET /withdrawals/fee-estimate
@@ -174,14 +178,31 @@ class CoinbaseProStream():
     self.SECRET_KEY = cfg.get('COINBASEPRO_API_SECRET_KEY')
     self.PASSWORD = cfg.get('COINBASEPRO_API_PASSWORD')
 
-  def auth(self, ws):
-    pass
-
   def subscribe(self, ws):
-    pass
+    sub_params = {
+      "type": "subscribe",
+      "product_ids": [
+        "ETH-USD"
+      ],
+      "channels": [
+        {
+          "name": "ticker",
+          "product_ids": [
+            "ETH-USD"
+          ]
+        }
+      ]
+    }
+    timestamp = str(time.time())
+    message = timestamp + 'GET' + '/users/self/verify'
+    auth_headers = get_auth_headers(message, timestamp)
+    sub_params['signature'] = auth_headers['CB-ACCESS-SIGN']
+    sub_params['key'] = auth_headers['CB-ACCESS-KEY']
+    sub_params['passphrase'] = auth_headers['CB-ACCESS-PASSPHRASE']
+    sub_params['timestamp'] = auth_headers['CB-ACCESS-TIMESTAMP']
+    ws.send(json.dumps(sub_params))
 
   def on_open(self, ws):
-    self.auth(ws)
     self.subscribe(ws)
 
   def on_message(self, ws, message):
@@ -193,3 +214,16 @@ class CoinbaseProStream():
 
   def __repr__(self):
       return f'<CoinbaseProStream >'
+
+def get_auth_headers(message, timestamp):
+    message = message.encode('ascii')
+    hmac_key = base64.b64decode(cfg.get('COINBASEPRO_API_SECRET_KEY'))
+    signature = hmac.new(hmac_key, message, hashlib.sha256)
+    signature_b64 = base64.b64encode(signature.digest()).decode('utf-8')
+    return {
+        'Content-Type': 'Application/JSON',
+        'CB-ACCESS-SIGN': signature_b64,
+        'CB-ACCESS-TIMESTAMP': timestamp,
+        'CB-ACCESS-KEY': cfg.get('COINBASEPRO_API_KEY_ID'),
+        'CB-ACCESS-PASSPHRASE': cfg.get('COINBASEPRO_API_PASSWORD')
+    }
