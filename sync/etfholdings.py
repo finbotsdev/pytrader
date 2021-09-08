@@ -47,7 +47,7 @@ def main(args):
     session.commit()
 
     for etf in session.query(Asset).filter(Asset.is_etf == True):
-      logger.info(f"Download Holdings Report for {etf.company} ({etf.symbol})")
+      logger.info(f"Download Holdings Report for {etf.name} ({etf.symbol})")
 
       # create directory to store download files
       dirname = os.path.dirname(__file__)

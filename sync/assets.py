@@ -2,8 +2,9 @@
 
 from model import Session
 from model.asset import Asset
+from model.exchange import Exchange
 import pytrader as pt
-from pytrader.data import AlpacaMarkets
+from pytrader.data import AlpacaMarkets, CoinbasePro
 from pytrader.log import logger
 import traceback
 
@@ -19,26 +20,27 @@ def main(args):
   print(args)
 
   try:
-    logger.info('maintain stock resources')
-
-    api = AlpacaMarkets()
     session = Session()
 
-    logger.info('get assets list from exchange')
+    api = AlpacaMarkets()
     assets = api.get_assets()
 
     for a in assets:
+      symbol = api.exchange_map(a['exchange'])
+
+      exchange = session.query(Exchange).filter(
+        Exchange.symbol == symbol).first()
+
       asset = session.query(Asset).filter(
         Asset.symbol == a['symbol'],
-        Asset.exchange == a['exchange']).first()
+        Asset.exchange_id == exchange.id).first()
 
       if not asset:
         logger.info(f"create record {a['symbol']} - {a['name']}")
         asset = Asset(
-          company=a['name'],
+          name=a['name'],
           asset_class=a['class'],
-          exchange=a['exchange'],
-          is_easy_to_borrow=a['easy_to_borrow'],
+          exchange_id=exchange.id,
           is_etf=False,
           is_fractionable=a['fractionable'],
           is_marginable=a['marginable'],
@@ -49,16 +51,48 @@ def main(args):
         session.add(asset)
       else:
         logger.info(f"update record {a['symbol']} - {a['name']}")
-        asset.company=a['name']
+        asset.name=a['name']
         asset.asset_class=a['class']
-        asset.exchange=a['exchange']
-        asset.is_easy_to_borrow=a['easy_to_borrow']
+        asset.exchange_id=exchange.id
         asset.is_fractionable=a['fractionable']
         asset.is_marginable=a['marginable']
         asset.is_shortable=a['shortable']
         asset.is_tradeable=a['tradable']
         asset.status=a['status']
         asset.symbol=a['symbol']
+
+      session.commit()
+
+
+    api = CoinbasePro()
+    assets = api.get_products()
+    for asset in assets:
+      print(asset)
+
+    for a in assets:
+      exchange = session.query(Exchange).filter(
+        Exchange.symbol == 'coinbase-pro').first()
+
+      asset = session.query(Asset).filter(
+        Asset.symbol == a['id'],
+        Asset.exchange_id == exchange.id).first()
+
+      if not asset:
+        logger.info(f"create record {a['id']} - {a['display_name']}")
+        asset = Asset(
+          name=a['display_name'],
+          asset_class='digital',
+          exchange_id=exchange.id,
+          status=a['status'],
+          symbol=a['id'])
+        session.add(asset)
+      else:
+        logger.info(f"update record {a['id']} - {a['display_name']}")
+        asset.name=a['display_name']
+        asset.asset_class='digital'
+        asset.exchange_id=exchange.id
+        asset.status=a['status']
+        asset.symbol=a['id']
 
       session.commit()
 
