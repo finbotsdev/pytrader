@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 import base64
+from datetime import datetime, timezone
 import hashlib
 import hmac
 import json
@@ -8,6 +9,7 @@ import pytrader.config as cfg
 import requests
 from requests.auth import AuthBase
 import time
+import traceback
 import websocket
 
 class CoinbaseExchangeAuth(AuthBase):
@@ -177,18 +179,26 @@ class CoinbaseProStream():
     self.KEY_ID = cfg.get('COINBASEPRO_API_KEY_ID')
     self.SECRET_KEY = cfg.get('COINBASEPRO_API_SECRET_KEY')
     self.PASSWORD = cfg.get('COINBASEPRO_API_PASSWORD')
+    self.message_count = 0
+    self.messages_minute = 0
+
+    self.bars = {}
 
   def subscribe(self, ws):
     sub_params = {
       "type": "subscribe",
       "product_ids": [
-        "ETH-USD"
+        "BTC-USD",
+        "ETH-USD",
+        "LTC-USD"
       ],
       "channels": [
         {
-          "name": "ticker",
+          "name": "matches",
           "product_ids": [
-            "ETH-USD"
+            "BTC-USD",
+            "ETH-USD",
+            "LTC-USD"
           ]
         }
       ]
@@ -206,7 +216,82 @@ class CoinbaseProStream():
     self.subscribe(ws)
 
   def on_message(self, ws, message):
-    print(message)
+    self.message_count += 1
+    self.messages_minute += 1
+    try:
+      msg = json.loads(message)
+
+      if msg["type"] == "match":
+
+        trade_id = msg["trade_id"]
+        price = msg["price"]
+        product = msg["product_id"]
+        sequence = msg["sequence"]
+        size = msg["size"]
+        time = msg["time"] # str formatted 2021-09-08T02:06:43.833769Z
+        t = datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%fZ') # convert to datetime object
+        t = utc_to_local(t)
+        dt = t.strftime("%Y-%m-%d %H:%M:00") # convert to minute timestamp
+
+        if not product in self.bars.keys():
+          self.bars[product] = {}
+
+        prodbars = self.bars[product]
+
+        if dt in prodbars.keys():
+          # update current dt dict for product/minute
+          prodbars[dt] = {
+            "open": prodbars[dt]['open'],
+            "high": max(float(price), prodbars[dt]['high']),
+            "low": min(float(price), prodbars[dt]['low']),
+            "close": float(price),
+            "volume": float(size) + prodbars[dt]['volume']
+          }
+        else:
+          # start new dt dict for product/minute
+          self.message_minute = 0
+          prodbars[dt] = {
+            "open": float(price),
+            "high": float(price),
+            "low": float(price),
+            "close": float(price),
+            "volume": float(size)
+          }
+
+        print(f'{self.messages_minute} ------------------------------------ {self.message_count}')
+        for product in self.bars:
+          for dt in self.bars[product]:
+            print(f'{dt} {product} {self.bars[product][dt]}')
+
+      """
+      subscribe to the 'matches' channel, and create a candle on your own from the data.
+      Create four variables (Open, High, Low, Close),
+      store the first price that occurs in a slice of time (in your case, an hour),
+      then store the max and min prices seen during the slice of time,
+      and finally the last price seen.
+      You can also keep a running summation of the volume during the time window.
+      """
+
+      # https://www.youtube.com/watch?v=ER7Va1qdURw
+
+      # {
+      #   "type":"match",
+      #   "trade_id":153238342,
+      #   "maker_order_id":"8c85395d-7a15-43eb-855a-d721520fe69e",
+      #   "taker_order_id":"87436bd7-ec44-4b34-abe2-bce0a7c66d55",
+      #   "side":"sell",
+      #   "size":"0.00038418",
+      #   "price":"3480.06",
+      #   "product_id":"ETH-USD",
+      #   "sequence":20563024039,
+      #   "time":"2021-09-08T01:42:32.206104Z"
+      # }
+
+    except Exception as e:
+      print(e)
+      print(e)
+      print(message)
+      print(traceback.format_exc())
 
   def run(self):
     ws = websocket.WebSocketApp(self.URL, on_open=self.on_open, on_message=self.on_message)
@@ -227,3 +312,6 @@ def get_auth_headers(message, timestamp):
         'CB-ACCESS-KEY': cfg.get('COINBASEPRO_API_KEY_ID'),
         'CB-ACCESS-PASSPHRASE': cfg.get('COINBASEPRO_API_PASSWORD')
     }
+
+def utc_to_local(utc_dt):
+    return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
