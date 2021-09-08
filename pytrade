@@ -156,13 +156,20 @@ def crontab_cmd(_):
   job.hour.every(6)
   job.minute.on(10)
 
-  # # sync etf holdings at 8:05 pm
-  # comment = f'pytrader'
-  # cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r etfholding'
-  # job = cron.new(command=cmd, comment=comment)
-  # job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
-  # job.hour.every(20)
-  # job.minute.on(10)
+  # sync etf holdings at 6:15 am
+  comment = f'pytrader'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r etfholding'
+  job = cron.new(command=cmd, comment=comment)
+  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+  job.hour.every(6)
+  job.minute.on(15)
+
+  # sync redit mentions every hour
+  comment = f'pytrader'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r wallstreetbets'
+  job = cron.new(command=cmd, comment=comment)
+  job.hour.every(1)
+  job.minute.on(0)
 
   # # sync prices daily at 8:10 pm
   # comment = f'pytrader'
@@ -172,12 +179,6 @@ def crontab_cmd(_):
   # job.hour.every(20)
   # job.minute.on(15)
 
-  # # sync redit mentions every hour
-  # comment = f'pytrader'
-  # cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r wallstreetbets'
-  # job = cron.new(command=cmd, comment=comment)
-  # job.hour.every(1)
-  # job.minute.on(0)
 
   cron.write()
 
