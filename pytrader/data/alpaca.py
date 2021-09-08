@@ -2,6 +2,7 @@
 
 import json
 import pytrader.config as cfg
+from pytrader.date import date
 from pytrader.log import logger
 import requests
 import time
@@ -131,6 +132,39 @@ class AlpacaMarkets():
       :param adjustment: string - Specifies the corporate action adjustment for the stocks. Enum: ‘raw’, ‘split’, ‘dividend’ or ‘all’. Default value is ‘raw’.
       """
       return self.get_data(f"stocks/{symbol}/bars", start=start, end=end, timeframe=timeframe, limit=limit, page_token=page_token, adjustment=adjustment)
+
+
+    def get_bars_chunked(self, symbol, start, end, timeframe='1Min', limit=10000, page_token=None, adjustment='raw'):
+      # convert string dates to datetime objects
+      fds, dstart = date(start)
+      eds, dend = date(end)
+
+      # get count of days between start and end date
+      days_remaining = abs(dend-dstart).days
+
+      # fetch bar data in week sized chunks
+      bars = []
+      while days_remaining > 0:
+        start = days_remaining
+        end = days_remaining -7
+        days_remaining = days_remaining - 8
+
+        sds, dstart = date(f'{start} days ago')
+        eds, dend = date(f'{end} days ago')
+
+        result = self.get_bars(symbol, end=eds, start=sds, timeframe=timeframe, limit=limit, page_token=page_token, adjustment=adjustment)
+        if result and result['bars']:
+          count = len(result['bars'])
+          res = result['bars']
+        else:
+          res = []
+        logger.info(f'{symbol} - {sds} to {eds} - {len(res)} bars returned')
+
+        bars.extend(res)
+
+      logger.info(f'{dstart} to {dend} - {len(bars)} minute bars')
+      return bars
+
     # GET/v2/stocks/snapshots
     # GET/v2/stocks/{symbol}/snapshot
 

@@ -8,7 +8,7 @@ import datetime as dt
 import getpass
 import os
 import pytrader as pt
-from pytrader.data import AlpacaMarkets, AlpacaStream, YahooFinance, date
+from pytrader.data import AlpacaMarkets, AlpacaStream, YahooFinance
 from pytrader.log import logger
 import pytrader.screener as screener
 import re
@@ -44,45 +44,13 @@ def backtest_cmd(args):
   ------
 
 """
-def get_chunk_bars(symbol, end, start):
-  logger.debug(f'fetch_range_bars {symbol}: {type(symbol)} {end}: {type(end)} {start}: {type(start)}')
-  # convert string dates to datetime objects
-
-  fds, dstart = date(start)
-  eds, dend = date(end)
-  # get count of days between start and end date
-  days_remaining = abs(dend-dstart).days
-
-  api = AlpacaMarkets()
-
-  # fetch bar data in week sized chunks
-  bars = []
-  while days_remaining > 0:
-    start = days_remaining
-    end = days_remaining -7
-    days_remaining = days_remaining - 8
-
-    sds, dstart = date(f'{start} days ago')
-    eds, dend = date(f'{end} days ago')
-
-    result = api.get_bars(symbol, end=eds, start=sds, timeframe='1Min', limit=10000)
-    if result and result['bars']:
-      count = len(result['bars'])
-      res = result['bars']
-    else:
-      res = []
-    logger.info(f'{symbol} - {sds} to {eds} - {len(res)} bars returned')
-
-    bars.extend(res)
-
-  logger.info(f'{dstart} to {dend} - {len(bars)} minute bars')
-  return bars
-
 def bars_cmd(args):
   logger.debug('pytrader history')
   logger.debug(args)
 
   session = Session()
+
+  api = AlpacaMarkets()
 
   logger.info('get assets list from local db')
   query = session.query(Asset).filter(
@@ -95,7 +63,7 @@ def bars_cmd(args):
   assets = query.all()
 
   for asset in assets:
-    bars = get_chunk_bars(asset.symbol, end=args.end, start=args.start)
+    bars = api.get_bars_chunked(asset.symbol, end=args.end, start=args.start)
     for b in bars:
       try:
         logger.info(f"create ohlcv for {asset.symbol} {b['t']} ")

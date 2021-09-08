@@ -1,5 +1,6 @@
 alembic
 alpaca_trade_api
+backtrader
 ccxt
 flask
 flask_sqlalchemy
