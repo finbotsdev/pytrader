@@ -148,6 +148,23 @@ class AlpacaMarkets():
     # DELETE/v2/watchlists/{watchlist_id}/{symbol}
     # POST/v2/watchlists
 
+    def exchange_map(self, symbol):
+      """
+      map alpaca exchange symbols to iex exchange symbols
+      """
+      exchanges = {
+        'NASDAQ': 'XNGS',
+        'ARCA': 'ARCX',
+        'NYSE': 'ARCX',
+        'AMEX': 'XASE',
+        'BATS': 'BATS',
+        'OTC': 'OTCM'
+      }
+      return exchanges[symbol]
+
+
+
+
 class AlpacaStream():
   def __init__(self):
     self.DATA_URL = cfg.get('APCA_API_DATA_URL')
