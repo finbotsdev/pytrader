@@ -18,8 +18,6 @@ def main(args):
   print(args)
 
   try:
-    logger.info('get data from coinbase pro api')
-
     api = CoinbasePro()
 
     logger.info('get_accounts')
@@ -80,6 +78,9 @@ def main(args):
 
     logger.info('get_transfers')
     results = api.get_transfers()
+
+    logger.info('get_user_verify')
+    results = api.get_user_verify()
 
     print(results)
 

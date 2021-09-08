@@ -15,8 +15,6 @@ def main(args):
   print(args)
 
   try:
-    logger.info('doing a thing')
-
     ws = CryptowatchStream()
     print(ws)
     ws.run()

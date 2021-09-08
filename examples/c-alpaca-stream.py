@@ -16,8 +16,6 @@ def main(args):
   print(args)
 
   try:
-    logger.info('doing a thing')
-
     ws = AlpacaStream()
     ws.set_tickers(args.tickers)
     ws.run()

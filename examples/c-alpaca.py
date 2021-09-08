@@ -17,8 +17,6 @@ def main(args):
   print(args)
 
   try:
-    logger.info('get data from alpaca markets api')
-
     api = AlpacaMarkets()
 
     logger.info('get_account')

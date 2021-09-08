@@ -19,8 +19,6 @@ def main(args):
   print(args)
 
   try:
-    logger.info('doing a thing')
-
     # print a list of all available exchange classes
     # print(ccxt.exchanges)
 
