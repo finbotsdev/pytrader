@@ -2,6 +2,7 @@
 
 import pytrader as pt
 from pytrader.data import CoinbasePro
+from pytrader.date import date
 from pytrader.log import logger
 import traceback
 from datetime import datetime
@@ -57,12 +58,11 @@ def main(args):
     results = api.get_product_trades('BTC-USD')
 
     logger.info('get_product_stats')
-    results = api.get_product_candles('BTC-USD')
-    # for candle in results:
-    #   closetime = int(candle[0])
-    #   ct = datetime.fromtimestamp(closetime)
-    #   candle[0] = ct
-    #   print(candle)
+
+    sds, dstart = date('1 month ago')
+    eds, dend = date('yesterday')
+    results = api.get_product_candles_chunked('BTC-USD', sds, eds)
+    print(results)
 
     logger.info('get_product_stats')
     results = api.get_product_stats('BTC-USD')

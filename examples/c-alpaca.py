@@ -36,7 +36,11 @@ def main(args):
     print(api.get_watchlists())
 
     logger.info('get_bars')
-    print(api.get_bars('AAPL', end=date('yesterday'), start=date('one week ago')))
+
+    # convert string dates to datetime objects
+    sds, dstart = date('1 month ago')
+    eds, dend = date('yesterday')
+    print(api.get_bars_chunked('AAPL', end=eds, start=sds))
 
   except Exception as e:
     logger.error(e)
