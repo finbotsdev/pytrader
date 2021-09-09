@@ -1,5 +1,6 @@
 
 import pytrader.config as cfg
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -38,3 +39,7 @@ class AsyncDatabaseSession:
 
 
 async_db_session = AsyncDatabaseSession()
+
+engine = sa.create_engine(DSN, echo=True)
+
+Session = sa.orm.sessionmaker(bind=engine)

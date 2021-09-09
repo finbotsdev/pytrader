@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 from flask import Flask, g
-import model
+import pytrader.model as model
 import os
 from werkzeug.utils import import_string
 
