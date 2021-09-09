@@ -116,6 +116,10 @@ class Cryptowatch():
   def get_market_ohlc(self, exchange, pair,):
     return self.get(f"markets/{exchange}/{pair}/ohlc")
 
+class CryptowatchDataframe():
+  def __new__(cls, bars):
+    pass
+
 class CryptowatchStream():
 
   def __init__(self):

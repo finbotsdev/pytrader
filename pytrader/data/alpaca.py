@@ -2,19 +2,18 @@
 
 import json
 import pandas as pd
+
 import pytrader.config as cfg
 from pytrader.date import date
 from pytrader.log import logger
+
 import requests
-from model import Session
-from model.asset import Asset
 import time
 import websocket
 
 class AlpacaMarkets():
 
   def __init__(self):
-    self.session = Session()
     self.BASE_URL = cfg.get('APCA_API_BASE_URL')
     self.DATA_URL = cfg.get('APCA_API_DATA_URL')
     self.KEY_ID = cfg.get('APCA_API_KEY_ID')
@@ -142,19 +141,7 @@ class AlpacaMarkets():
     else:
       bars = []
 
-    logger.info(f'{symbol} - {start} to {end} - {len(bars)} bars returned')
-    asset = self.session.query(Asset).filter(Asset.symbol == symbol).first()
-
-    df = pd.DataFrame(bars)
-    df.set_axis(['dt', 'open', 'high', 'low', 'close', 'volume', 'n', 'vw'], axis=1, inplace=True)
-    df["dt"] = pd.to_datetime((df["dt"]), format='%Y-%m-%dT%H:%M:%SZ')
-    df.drop(labels=['n','vw'], axis=1, inplace=True)
-    # add symbol column
-    df['period'] = 'minute'
-    df['asset_id'] = asset.id
-    df.sort_values(by=['dt'], inplace=True)
-
-    return  df
+    return bars
 
   def get_bars_chunked(self, symbol, start, end, timeframe='1Min', limit=10000, page_token=None, adjustment='raw'):
     # convert string dates to datetime objects
@@ -171,15 +158,14 @@ class AlpacaMarkets():
       end = days_remaining -7
       days_remaining = days_remaining - 8
 
-      sds, dstart = date(f'{start} days ago')
-      eds, dend = date(f'{end} days ago')
+      sds, start_time = date(f'{start} days ago')
+      eds, end_time = date(f'{end} days ago')
 
       result = self.get_bars(symbol, end=eds, start=sds, timeframe=timeframe, limit=limit, page_token=page_token, adjustment=adjustment)
-      bars.append(result)
+      logger.info(f'{symbol} - {start_time} to {end_time} - {len(result)} bars returned')
+      bars.extend(result)
 
-    df = pd.concat(bars)
-    df.drop_duplicates(subset='dt', inplace=True)
-    return df
+    return bars
 
   # GET/v2/stocks/snapshots
   # GET/v2/stocks/{symbol}/snapshot
@@ -212,8 +198,17 @@ class AlpacaMarkets():
     }
     return exchanges[symbol]
 
-
-
+class AlpacaDataframe():
+  def __new__(cls, bars):
+    df = pd.DataFrame(bars)
+    df.set_axis(['dt', 'open', 'high', 'low', 'close', 'volume', 'n', 'vw'], axis=1, inplace=True)
+    df["dt"] = pd.to_datetime((df["dt"]), format='%Y-%m-%dT%H:%M:%SZ')
+    df.drop(labels=['n','vw'], axis=1, inplace=True)
+    # add symbol column
+    df['period'] = 'minute'
+    df.sort_values(by=['dt'], inplace=True)
+    df.drop_duplicates(subset='dt', inplace=True)
+    return df
 
 class AlpacaStream():
   def __init__(self):

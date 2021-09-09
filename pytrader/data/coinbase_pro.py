@@ -5,8 +5,6 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import json
-from model import Session
-from model.asset import Asset
 import pandas as pd
 import pytrader.config as cfg
 from pytrader.log import logger
@@ -42,7 +40,6 @@ class CoinbaseExchangeAuth(AuthBase):
 class CoinbasePro():
 
   def __init__(self):
-    self.session = Session()
     self.URL = cfg.get('COINBASEPRO_API_URL')
 
   def get(self, path, **kwargs):
@@ -143,18 +140,7 @@ class CoinbasePro():
     couple that with the start and end parameters being dates and not datetimes
     there is no way to retrieve complete historical data at minute granularity
     """
-
-    bars = self.get(f"products/{product_id}/candles", start=start, end=end, granularity=granularity)
-    asset = self.session.query(Asset).filter(Asset.symbol == product_id).first()
-
-    df = pd.DataFrame(bars)
-    df.set_axis(['dt', 'open', 'high', 'low', 'close', 'volume'], axis=1, inplace=True)
-    df["dt"] = pd.to_datetime(df["dt"], unit='s')
-    df['period'] = 'minute'
-    df['asset_id'] = asset.id
-    df.sort_values(by=['dt'], inplace=True)
-
-    return df
+    return self.get(f"products/{product_id}/candles", start=start, end=end, granularity=granularity)
 
   def get_product_candles_chunked(self, product_id, start=None, end=None, granularity=60):
     start_time = datetime.strptime(start, '%Y-%m-%d')
@@ -179,12 +165,10 @@ class CoinbasePro():
     for end_time in chunks:
       result = self.get_product_candles(product_id, start=start_time, end=end_time, granularity=granularity)
       logger.info(f'{product_id} - {start_time} to {end_time} - {len(result)} bars returned')
-      bars.append(result)
+      bars.extend(result)
       start_time = end_time
 
-    df = pd.concat(bars)
-    df.drop_duplicates(subset='dt', inplace=True)
-    return df
+    return bars
 
   # GET /products/<product-id>/stats
   def get_product_stats(self, product_id):
@@ -223,6 +207,17 @@ class CoinbasePro():
   # POST /withdrawals/crypto
   # GET /withdrawals/fee-estimate
   # POST /withdrawals/payment-method
+
+class CoinbaseProDataFrame():
+  def __new__(cls, bars):
+    df = pd.DataFrame(bars)
+    df.set_axis(['dt', 'open', 'high', 'low', 'close', 'volume'], axis=1, inplace=True)
+    df["dt"] = pd.to_datetime(df["dt"], unit='s')
+    df['period'] = 'minute'
+    # df['asset_id'] = asset.id
+    df.sort_values(by=['dt'], inplace=True)
+    df.drop_duplicates(subset='dt', inplace=True)
+    return df
 
 class CoinbaseProStream():
   def __init__(self):
@@ -366,6 +361,3 @@ class CoinbaseProStream():
 
   def __repr__(self):
       return f'<CoinbaseProStream >'
-
-
-
