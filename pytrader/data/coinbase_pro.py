@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import json
+from model import Session
+from model.asset import Asset
 import pandas as pd
 import pytrader.config as cfg
 from pytrader.log import logger
@@ -40,6 +42,7 @@ class CoinbaseExchangeAuth(AuthBase):
 class CoinbasePro():
 
   def __init__(self):
+    self.session = Session()
     self.URL = cfg.get('COINBASEPRO_API_URL')
 
   def get(self, path, **kwargs):
@@ -142,10 +145,13 @@ class CoinbasePro():
     """
 
     bars = self.get(f"products/{product_id}/candles", start=start, end=end, granularity=granularity)
+    asset = self.session.query(Asset).filter(Asset.symbol == product_id).first()
 
     df = pd.DataFrame(bars)
     df.set_axis(['dt', 'open', 'high', 'low', 'close', 'volume'], axis=1, inplace=True)
     df["dt"] = pd.to_datetime(df["dt"], unit='s')
+    df['period'] = 'minute'
+    df['asset_id'] = asset.id
     df.sort_values(by=['dt'], inplace=True)
 
     return df
@@ -176,7 +182,9 @@ class CoinbasePro():
       bars.append(result)
       start_time = end_time
 
-    return pd.concat(bars)
+    df = pd.concat(bars)
+    df.drop_duplicates(subset='dt', inplace=True)
+    return df
 
   # GET /products/<product-id>/stats
   def get_product_stats(self, product_id):
