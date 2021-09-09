@@ -14,7 +14,7 @@ DB = {
   'database': cfg.get('DB_NAME'),
 }
 
-DSN=f"postgresql+asyncpg://{DB['user']}:{DB['password']}@{DB['host']}/{DB['database']}-dev"
+DSN=f"postgresql://{DB['user']}:{DB['password']}@{DB['host']}/{DB['database']}-dev"
 
 
 class AsyncDatabaseSession:

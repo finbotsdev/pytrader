@@ -4,14 +4,12 @@ import config as cfg
 from datetime import datetime, date, time
 from psaw import PushshiftAPI
 import pytrader as pt
+from pytrader.database import Session
 from pytrader.log import logger
+from pytrader.model import Asset, Mention
 import sqlalchemy as sa
 from sqlalchemy import exc
 import traceback
-
-from model import Session
-from model.asset import Asset
-from model.mention import Mention
 
 
 """

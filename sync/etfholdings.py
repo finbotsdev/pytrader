@@ -1,13 +1,13 @@
 # encoding: utf-8
 
 import datetime as dt
-from model import Session
-from model.asset import Asset
-from model.etf_holding import EtfHolding
 import os
 import pytrader as pt
 from pytrader.csv import is_comment, is_whitespace, read_and_filter_csv
+from pytrader.data import AlpacaMarkets, CoinbasePro
+from pytrader.database import Session
 from pytrader.log import logger
+from pytrader.model import Asset, EtfHolding
 import requests
 import traceback
 

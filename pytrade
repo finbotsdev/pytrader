@@ -9,16 +9,14 @@ import getpass
 import os
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, AlpacaStream, YahooFinance
+from pytrader.database import Session
 from pytrader.log import logger
+from pytrader.model import Asset, Ohlcv
 import pytrader.screener as screener
 import re
 import sqlalchemy as sa
 from sqlalchemy import exc
 import traceback
-
-from model import Session
-from model.asset import Asset
-from model.ohlcv import Ohlcv
 
 
 """

@@ -1,11 +1,10 @@
 # encoding: utf-8
 
-from model import Session
-from model.asset import Asset
-from model.exchange import Exchange
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, CoinbasePro
+from pytrader.database import Session
 from pytrader.log import logger
+from pytrader.model import Asset, Exchange
 import traceback
 
 
