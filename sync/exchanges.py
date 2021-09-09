@@ -34,7 +34,6 @@ def main(args):
           symbol=e['mic'],
           exchange_class=e['type'],
           active=True)
-        print(exchange)
         session.add(exchange)
       else:
         logger.info(f"update record {e['mic']} - {e['name']} - {e['type']}")
@@ -46,7 +45,6 @@ def main(args):
 
     cwapi = Cryptowatch()
     result = cwapi.get_exchanges()
-    print(result)
     exchanges = result['result']
 
     for e in exchanges:

@@ -107,4 +107,16 @@ log_date = datetime.now().strftime("%Y.%m.%d")
 log_time = datetime.now().strftime("%H.%M.%S")
 
 logger = logging
+
+logging.basicConfig()
+
+db_log_level = logger.ERROR
+logging.getLogger('sqlalchemy').setLevel(db_log_level)
+logger.getLogger('sqlalchemy.dialect').setLevel(db_log_level)
+logger.getLogger('sqlalchemy.engine.Engine').setLevel(db_log_level)
+logger.getLogger('sqlalchemy.pool').setLevel(db_log_level)
+logger.getLogger('sqlalchemy.orm').setLevel(db_log_level)
+
+
 config_root_logger()
+
