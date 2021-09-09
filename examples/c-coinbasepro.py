@@ -1,11 +1,12 @@
 # encoding: utf-8
 
+from model import engine
+import pandas as pd
 import pytrader as pt
 from pytrader.data import CoinbasePro
 from pytrader.date import date
 from pytrader.log import logger
 import traceback
-from datetime import datetime
 
 
 """
@@ -59,31 +60,27 @@ def main(args):
 
     logger.info('get_product_stats')
 
+    # convert string dates to datetime objects
     sds, dstart = date('1 month ago')
     eds, dend = date('yesterday')
-    results = api.get_product_candles_chunked('BTC-USD', sds, eds)
-    print(results)
+    df = api.get_product_candles_chunked('BTC-USD', sds, eds)
+    print(df)
 
-    logger.info('get_product_stats')
-    results = api.get_product_stats('BTC-USD')
+    # # this is fantastically fast but fails on duplicate recores
+    # # dataframe to_sql will fail if uniqueness indexes fail
+    # df.to_sql('ohlcv', engine, if_exists='append', index=False)
 
-    logger.info('get_profiles')
-    results = api.get_profiles()
+    # iterate dataframe and check for duplicate rows before writing
+    # ignores duplicates but is very slow
+    for i, row in df.iterrows():
+      try:
+        df.iloc[i:i+1].to_sql(con=engine, if_exists='append', index=False, name="ohlcv")
+      except Exception as e:
+        pass
 
-    logger.info('get_reports')
-    results = api.get_reports()
-
-    logger.info('get_time')
-    results = api.get_time()
-
-    logger.info('get_transfers')
-    results = api.get_transfers()
-
-    logger.info('get_user_verify')
-    results = api.get_user_verify()
-
-    print(results)
-
+    # possible solutions
+    # https://gist.github.com/Nikolay-Lysenko/0887f4b59dc4914cec9b236c317d06e3
+    # https://gist.github.com/luke/5697511
 
   except Exception as e:
     logger.error(e)
