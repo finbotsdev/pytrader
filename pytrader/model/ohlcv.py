@@ -1,7 +1,8 @@
-from model import Base
+from pytrader.database import Base
 import sqlalchemy as sa
+from .admin import ModelAdmin
 
-class Ohlcv(Base):
+class Ohlcv(Base, ModelAdmin):
     __tablename__ = 'ohlcv'
 
     asset_id = sa.Column(sa.Integer, sa.ForeignKey('asset.id'), primary_key=True)

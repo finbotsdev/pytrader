@@ -1,7 +1,8 @@
-from model import Base
+from pytrader.database import Base
 import sqlalchemy as sa
+from .admin import ModelAdmin
 
-class Exchange(Base):
+class Exchange(Base, ModelAdmin):
     __tablename__ = 'exchange'
 
     id = sa.Column(sa.Integer, primary_key=True)
