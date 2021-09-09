@@ -235,8 +235,21 @@ class CoinbaseProStream():
 
     self.bars = {}
 
+  def auth_headers(self, message, timestamp):
+    message = message.encode('ascii')
+    hmac_key = base64.b64decode(self.SECRET_KEY)
+    signature = hmac.new(hmac_key, message, hashlib.sha256)
+    signature_b64 = base64.b64encode(signature.digest()).decode('utf-8')
+    return {
+      'Content-Type': 'Application/JSON',
+      'CB-ACCESS-SIGN': signature_b64,
+      'CB-ACCESS-TIMESTAMP': timestamp,
+      'CB-ACCESS-KEY': self.KEY_ID,
+      'CB-ACCESS-PASSPHRASE': self.PASSWORD
+    }
+
   def subscribe(self, ws):
-    sub_params = {
+    params = {
       "type": "subscribe",
       "product_ids": [
         "BTC-USD",
@@ -256,12 +269,12 @@ class CoinbaseProStream():
     }
     timestamp = str(time.time())
     message = timestamp + 'GET' + '/users/self/verify'
-    auth_headers = get_auth_headers(message, timestamp)
-    sub_params['signature'] = auth_headers['CB-ACCESS-SIGN']
-    sub_params['key'] = auth_headers['CB-ACCESS-KEY']
-    sub_params['passphrase'] = auth_headers['CB-ACCESS-PASSPHRASE']
-    sub_params['timestamp'] = auth_headers['CB-ACCESS-TIMESTAMP']
-    ws.send(json.dumps(sub_params))
+    auth = self.auth_headers(message, timestamp)
+    params['signature'] = auth['CB-ACCESS-SIGN']
+    params['key'] = auth['CB-ACCESS-KEY']
+    params['passphrase'] = auth['CB-ACCESS-PASSPHRASE']
+    params['timestamp'] = auth['CB-ACCESS-TIMESTAMP']
+    ws.send(json.dumps(params))
 
   def on_open(self, ws):
     self.subscribe(ws)
@@ -281,7 +294,7 @@ class CoinbaseProStream():
         size = msg["size"]
         time = msg["time"] # str formatted 2021-09-08T02:06:43.833769Z
         t = datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%fZ') # convert to datetime object
-        t = utc_to_local(t)
+        t = self.utc_to_local(t)
         dt = t.strftime("%Y-%m-%d %H:%M:00") # convert to minute timestamp
 
         if not product in self.bars.keys():
@@ -344,6 +357,9 @@ class CoinbaseProStream():
       print(message)
       print(traceback.format_exc())
 
+  def utc_to_local(self, utc_dt):
+      return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+
   def run(self):
     ws = websocket.WebSocketApp(self.URL, on_open=self.on_open, on_message=self.on_message)
     ws.run_forever()
@@ -351,18 +367,5 @@ class CoinbaseProStream():
   def __repr__(self):
       return f'<CoinbaseProStream >'
 
-def get_auth_headers(message, timestamp):
-    message = message.encode('ascii')
-    hmac_key = base64.b64decode(cfg.get('COINBASEPRO_API_SECRET_KEY'))
-    signature = hmac.new(hmac_key, message, hashlib.sha256)
-    signature_b64 = base64.b64encode(signature.digest()).decode('utf-8')
-    return {
-        'Content-Type': 'Application/JSON',
-        'CB-ACCESS-SIGN': signature_b64,
-        'CB-ACCESS-TIMESTAMP': timestamp,
-        'CB-ACCESS-KEY': cfg.get('COINBASEPRO_API_KEY_ID'),
-        'CB-ACCESS-PASSPHRASE': cfg.get('COINBASEPRO_API_PASSWORD')
-    }
 
-def utc_to_local(utc_dt):
-    return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+
