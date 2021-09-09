@@ -1,10 +1,12 @@
 # encoding: utf-8
 
+import asyncio
 import pandas as pd
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, AlpacaDataframe
 from pytrader.date import date
 from pytrader.log import logger
+from pytrader.model import Asset, Ohlcv
 import traceback
 
 
@@ -20,11 +22,12 @@ def main(args):
 
   try:
     api = AlpacaMarkets()
+    symbol = 'AAPL'
 
     # convert string dates to datetime objects
     sds, dstart = date('1 month ago')
     eds, dend = date('yesterday')
-    bars = api.get_bars_chunked('AAPL', end=eds, start=sds)
+    bars = api.get_bars_chunked(symbol=symbol, end=eds, start=sds)
 
     df = AlpacaDataframe(bars)
     print(df)
