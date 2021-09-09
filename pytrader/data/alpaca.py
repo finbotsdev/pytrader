@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 import json
+import pandas as pd
 import pytrader.config as cfg
 from pytrader.date import date
 from pytrader.log import logger
@@ -131,8 +132,21 @@ class AlpacaMarkets():
       :param timeframe: string (required) - Timeframe for the aggregation. Values are customizeable, frequently used examples: 1Min, 15Min, 1Hour, 1Day.
       :param adjustment: string - Specifies the corporate action adjustment for the stocks. Enum: ‘raw’, ‘split’, ‘dividend’ or ‘all’. Default value is ‘raw’.
       """
-      return self.get_data(f"stocks/{symbol}/bars", start=start, end=end, timeframe=timeframe, limit=limit, page_token=page_token, adjustment=adjustment)
+      result = self.get_data(f"stocks/{symbol}/bars", start=start, end=end, timeframe=timeframe, limit=limit, page_token=page_token, adjustment=adjustment)
 
+      if result and result['bars']:
+        bars = result['bars']
+      else:
+        bars = []
+
+      logger.info(f'{symbol} - {start} to {end} - {len(bars)} bars returned')
+
+      df = pd.DataFrame(bars)
+      df.set_axis(['dt', 'open', 'high', 'low', 'close', 'volume', 'n', 'vw'], axis=1, inplace=True)
+      df["dt"] = pd.to_datetime((df["dt"]), format='%Y-%m-%dT%H:%M:%SZ')
+      df.sort_values(by=['dt'], inplace=True)
+
+      return  df
 
     def get_bars_chunked(self, symbol, start, end, timeframe='1Min', limit=10000, page_token=None, adjustment='raw'):
       # convert string dates to datetime objects
@@ -153,17 +167,9 @@ class AlpacaMarkets():
         eds, dend = date(f'{end} days ago')
 
         result = self.get_bars(symbol, end=eds, start=sds, timeframe=timeframe, limit=limit, page_token=page_token, adjustment=adjustment)
-        if result and result['bars']:
-          count = len(result['bars'])
-          res = result['bars']
-        else:
-          res = []
-        logger.info(f'{symbol} - {sds} to {eds} - {len(res)} bars returned')
+        bars.append(result)
 
-        bars.extend(res)
-
-      logger.info(f'{dstart} to {dend} - {len(bars)} minute bars')
-      return bars
+      return pd.concat(bars)
 
     # GET/v2/stocks/snapshots
     # GET/v2/stocks/{symbol}/snapshot

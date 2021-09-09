@@ -1,11 +1,13 @@
 # encoding: utf-8
 
 import base64
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import json
+import pandas as pd
 import pytrader.config as cfg
+from pytrader.log import logger
 import requests
 from requests.auth import AuthBase
 import time
@@ -133,8 +135,49 @@ class CoinbasePro():
 
     If you wish to retrieve fine granularity data over a larger time range,
     you will need to make multiple requests with new start/end ranges.
+
+    at 60 second granularity this means a maximum of 5 hours worth of data
+    couple that with the start and end parameters being dates and not datetimes
+    there is no way to retrieve complete historical data at minute granularity
     """
-    return self.get(f"products/{product_id}/candles", start=start, end=end, granularity=granularity)
+
+    bars = self.get(f"products/{product_id}/candles", start=start, end=end, granularity=granularity)
+
+    df = pd.DataFrame(bars)
+    df.set_axis(['dt', 'open', 'high', 'low', 'close', 'volume'], axis=1, inplace=True)
+    df["dt"] = pd.to_datetime(df["dt"], unit='s')
+    df.sort_values(by=['dt'], inplace=True)
+
+    return df
+
+  def get_product_candles_chunked(self, product_id, start=None, end=None, granularity=60):
+    start_time = datetime.strptime(start, '%Y-%m-%d')
+    end_time = datetime.strptime(end, '%Y-%m-%d')
+
+    # response can include max 300 bars
+    # calculate the max timeframe we can request
+    # so that request shuuld return no more than 300 bars
+    max_bars = 275
+    max_time_seconds = max_bars * granularity
+    delta = timedelta(seconds = max_time_seconds)
+    chunk_end = start_time + delta
+
+    # create a list of time chunks
+    chunks = []
+    while chunk_end < end_time:
+      chunks.append(chunk_end)
+      chunk_end = chunk_end + delta
+    chunks.append(end_time)
+
+    bars = []
+    for end_time in chunks:
+      result = self.get_product_candles(product_id, start=start_time, end=end_time, granularity=granularity)
+      logger.info(f'{product_id} - {start_time} to {end_time} - {len(result)} bars returned')
+      bars.append(result)
+      start_time = end_time
+
+    return pd.concat(bars)
+
   # GET /products/<product-id>/stats
   def get_product_stats(self, product_id):
     return self.get(f"products/{product_id}/stats")
