@@ -18,11 +18,11 @@ using ohlcv data from yahoo finance
 class Strategy(bt.Strategy):
 
     def __init__(self):
-        print("initializing strategy")
+        logger.debug("initializing strategy")
         self.data_ready = False
 
     def notify_data(self, data, status):
-        print('Data Status =>', data._getstatusname(status))
+        logger.debug('Data Status =>', data._getstatusname(status))
         if status == data.LIVE:
             self.data_ready = True
 
@@ -42,24 +42,27 @@ class Strategy(bt.Strategy):
             return
 
 def main(args):
-    cerebro = bt.Cerebro()
-    cerebro.broker.set_cash(1000000)
-    cerebro.addstrategy(Strategy)
-    cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
+  logger.info('bt-csvfile.py')
+  logger.debug(args)
 
-    data = feed(source='yfinance', symbol=args.ticker, start=args.start, end=args.end)
-    print(f'data feed returned type {type(data)}')
-    cerebro.adddata(data)
+  cerebro = bt.Cerebro()
+  cerebro.broker.set_cash(1000000)
+  cerebro.addstrategy(Strategy)
+  cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
 
-    value = cerebro.broker.getvalue()
-    print(f'Starting Portfolio Value ${value:,.2f}')
+  data = feed(source='csvfile', symbol=args.ticker, start=args.start, end=args.end, interval=args.interval)
+  print(f'data feed returned type {type(data)}')
+  cerebro.adddata(data)
 
-    cerebro.run()
+  value = cerebro.broker.getvalue()
+  print(f'Starting Portfolio Value ${value:,.2f}')
 
-    value = cerebro.broker.getvalue()
-    print(f'Ending Portfolio Value ${value:,.2f}')
+  cerebro.run()
 
-    cerebro.plot()
+  value = cerebro.broker.getvalue()
+  print(f'Ending Portfolio Value ${value:,.2f}')
+
+  cerebro.plot()
 
 if __name__ == '__main__':
   args = cli_options_parser()

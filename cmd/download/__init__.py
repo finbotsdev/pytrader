@@ -27,7 +27,7 @@ def argparser(subparser):
 
 def main(args):
   logger.info('pytrader download')
-  logger.info(args)
+  logger.debug(args)
 
   eds, dend = date(args.end)
   interval = args.interval

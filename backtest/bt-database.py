@@ -42,24 +42,27 @@ class Strategy(bt.Strategy):
             return
 
 def main(args):
-    cerebro = bt.Cerebro()
-    cerebro.broker.set_cash(1000000)
-    cerebro.addstrategy(Strategy)
-    cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
+  logger.info('bt-database.py')
+  logger.debug(args)
 
-    data = feed(source='local', symbol=args.ticker, start=args.start, end=args.end)
-    print(f'data feed returned type {type(data)}')
-    cerebro.adddata(data)
+  cerebro = bt.Cerebro()
+  cerebro.broker.set_cash(1000000)
+  cerebro.addstrategy(Strategy)
+  cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
 
-    value = cerebro.broker.getvalue()
-    print(f'Starting Portfolio Value ${value:,.2f}')
+  data = feed(source='database', symbol=args.ticker, start=args.start, end=args.end)
+  print(f'data feed returned type {type(data)}')
+  cerebro.adddata(data)
 
-    cerebro.run()
+  value = cerebro.broker.getvalue()
+  print(f'Starting Portfolio Value ${value:,.2f}')
 
-    value = cerebro.broker.getvalue()
-    print(f'Ending Portfolio Value ${value:,.2f}')
+  cerebro.run()
 
-    cerebro.plot()
+  value = cerebro.broker.getvalue()
+  print(f'Ending Portfolio Value ${value:,.2f}')
+
+  cerebro.plot()
 
 if __name__ == '__main__':
   args = cli_options_parser()

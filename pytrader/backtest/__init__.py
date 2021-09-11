@@ -21,24 +21,44 @@ def cli_options_parser():
   parser.add_argument('-t', '--ticker', default='AAPL', help="ticker symbol to include" )
   return parser.parse_args()
 
-def feed(source: str, symbol: str, start: str ='one year ago', end: str = 'yesterday'):
+def feed(source: str, symbol: str, start: str ='one year ago', end: str = 'yesterday', interval: str = 'day'):
   """
   feed
   ----------------------
 
   """
-  modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
-  datapath = os.path.join(modpath, '../', '.data', 'day', f'{symbol}.csv')
 
   fds, dt_start = date(start)
   tds, dt_end = date(end)
 
-  if source == 'yfinance':
-    return bt.feeds.YahooFinanceCSVData(
-      dataname=datapath, fromdate=dt_start,
-      todate=dt_end, reverse=False)
+  if source == 'csvfile':
+    modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
+    datapath = os.path.join(modpath, '../', '.data', interval, f'{symbol}.csv')
 
-  if source == 'local':
+    if interval == 'day':
+      return bt.feeds.YahooFinanceCSVData(
+        dataname=datapath,
+        fromdate=dt_start,
+        todate=dt_end,
+        reverse=False)
+
+    if interval == 'minute':
+
+      df = pd.DataFrame()
+      df = pd.read_csv(datapath)
+      df['dt'] = pd.to_datetime(df['dt'])
+      df.set_axis(['datetime', 'open', 'high', 'low', 'close', 'volume'], axis=1, inplace=True)
+      return bt.feeds.PandasData(
+        dataname=df,
+        datetime='datetime',
+        high=2,
+        low=3,
+        open=1,
+        close=4,
+        volume=5,
+      )
+
+  if source == 'database':
     asset = session.query(Asset.id).filter(
       Asset.symbol == symbol).first()
 
