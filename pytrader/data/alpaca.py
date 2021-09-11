@@ -2,12 +2,12 @@
 
 import json
 import pandas as pd
-
 import pytrader.config as cfg
 from pytrader.date import date
 from pytrader.log import logger
-
 import requests
+from requests.auth import AuthBase
+from requests.packages.urllib3.util.retry import Retry
 import time
 import websocket
 
@@ -36,7 +36,10 @@ class AlpacaMarkets():
       if params:
         url = "?".join([url, "&".join(params)])
 
-      r = requests.get(url, headers=self.auth_header)
+      s = requests.Session()
+      retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+      s.mount('https://', HTTPAdapter(max_retries=retries))
+      r = s.get(url, headers=self.auth_header)
 
       if r.ok:
         return r.json()
@@ -54,7 +57,10 @@ class AlpacaMarkets():
       if params:
         url = "?".join([url, "&".join(params)])
 
-      r = requests.get(url, headers=self.auth_header)
+      s = requests.Session()
+      retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+      s.mount('https://', HTTPAdapter(max_retries=retries))
+      r = s.get(url, headers=self.auth_header)
 
       if r.ok:
         return r.json()

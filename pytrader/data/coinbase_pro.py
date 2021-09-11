@@ -9,7 +9,9 @@ import pandas as pd
 import pytrader.config as cfg
 from pytrader.log import logger
 import requests
+from requests.adapters import HTTPAdapter
 from requests.auth import AuthBase
+from requests.packages.urllib3.util.retry import Retry
 import time
 import traceback
 import websocket
@@ -55,7 +57,10 @@ class CoinbasePro():
 
     auth = CoinbaseExchangeAuth()
 
-    r = requests.get(url, auth=auth)
+    s = requests.Session()
+    retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+    s.mount('https://', HTTPAdapter(max_retries=retries))
+    r = s.get(url, auth=auth)
 
     if r.ok:
       return r.json()
@@ -164,8 +169,9 @@ class CoinbasePro():
     bars = []
     for end_time in chunks:
       result = self.get_product_candles(product_id, start=start_time, end=end_time, granularity=granularity)
-      logger.info(f'{product_id} - {start_time} to {end_time} - {len(result)} bars returned')
-      bars.extend(result)
+      if result:
+        logger.info(f'{product_id} - {start_time} to {end_time} - {len(result)} bars returned')
+        bars.extend(result)
       start_time = end_time
 
     return bars
@@ -213,10 +219,9 @@ class CoinbaseProDataFrame():
     df = pd.DataFrame(bars)
     df.set_axis(['dt', 'open', 'high', 'low', 'close', 'volume'], axis=1, inplace=True)
     df["dt"] = pd.to_datetime(df["dt"], unit='s')
-    df['period'] = 'minute'
-    # df['asset_id'] = asset.id
     df.sort_values(by=['dt'], inplace=True)
     df.drop_duplicates(subset='dt', inplace=True)
+    df.reset_index(drop=True, inplace=True)
     return df
 
 class CoinbaseProStream():
