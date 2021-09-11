@@ -25,7 +25,8 @@ def main(symbol: str, interval: str, start, end):
   :param end: datetime
   """
   try:
-    logger.debug('pytrader coinbasepro download')
+    logger.info('pytrader coinbasepro download')
+    logger.debug(f'symbol={symbol} interval={interval} start={start} end={end}')
 
     api = CoinbasePro()
 
