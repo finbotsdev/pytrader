@@ -10,7 +10,9 @@ from pytrader.model import Asset, Ohlcv
 from sqlalchemy.sql import text
 import sys
 
+
 session = Session()
+
 
 def cli_options_parser():
   parser = pt.ArgumentParser()
@@ -20,6 +22,7 @@ def cli_options_parser():
   parser.add_argument("-s", "--start", default="5 years ago", help="latest date to include")
   parser.add_argument('-t', '--ticker', default='AAPL', help="ticker symbol to include" )
   return parser.parse_args()
+
 
 def feed(source: str, symbol: str, start: str ='one year ago', end: str = 'yesterday', interval: str = 'day'):
   """
@@ -35,15 +38,21 @@ def feed(source: str, symbol: str, start: str ='one year ago', end: str = 'yeste
     modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
     datapath = os.path.join(modpath, '../', '.data', interval, f'{symbol}.csv')
 
-    if interval == 'day':
+    if not os.path.isfile(datapath):
+      raise Exception(datapath, 'not found')
+
+    with open(datapath) as f:
+      lines = f.read()
+      first = lines.split('\n', 1)[0]
+
+    if first == 'Date,Open,High,Low,Close,Volume,Dividends,Stock Splits':
       return bt.feeds.YahooFinanceCSVData(
         dataname=datapath,
         fromdate=dt_start,
         todate=dt_end,
         reverse=False)
 
-    if interval == 'minute':
-
+    if first == 'dt,open,high,low,close,volume':
       df = pd.DataFrame()
       df = pd.read_csv(datapath)
       df['dt'] = pd.to_datetime(df['dt'])
