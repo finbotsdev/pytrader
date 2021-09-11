@@ -62,7 +62,9 @@ def main(args):
     logger.info('get_product_stats')
     sds, dstart = date('2 days ago')
     eds, dend = date('yesterday')
-    print(api.get_product_candles_chunked('BTC-USD', sds, eds))
+    results = api.get_product_candles_chunked('BTC-USD', dstart, dend)
+
+    print(results)
 
   except Exception as e:
     logger.error(e)
