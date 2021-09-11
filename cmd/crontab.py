@@ -17,7 +17,7 @@ def argparser(subparser):
   parser = subparser.add_parser('crontab')
 
 
-def main(_):
+def main(args):
   logger.debug('pytrader crontab')
   logger.debug(args)
 
@@ -52,7 +52,15 @@ def main(_):
   comment = f'pytrader'
   cmd = f'cd {cwd}; ./cronjob ./pytrade sync -r etfholding'
   job = cron.new(command=cmd, comment=comment)
-  job.dow.on('MON', 'TUE', 'WED', 'THU', 'FRI')
+  job.hour.every(1)
+  job.hour.every(6)
+  job.minute.on(15)
+
+  # sync price data for yesterday at 6:20 am
+  comment = f'pytrader'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade download -i minute -s "1 day ago"'
+  job = cron.new(command=cmd, comment=comment)
+  job.hour.every(1)
   job.hour.every(6)
   job.minute.on(15)
 
