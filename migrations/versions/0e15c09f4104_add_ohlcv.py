@@ -21,7 +21,7 @@ def upgrade():
     'ohlcv',
     sa.Column('asset_id', sa.Integer, sa.ForeignKey('asset.id')),
     sa.Column('dt', sa.DateTime),
-    sa.Column('period', sa.Enum('minute', 'hour', 'day', name='PERIOD')),
+    sa.Column('period', sa.Unicode(10)),
     sa.Column('open', sa.Numeric),
     sa.Column('high', sa.Numeric),
     sa.Column('low', sa.Numeric),
