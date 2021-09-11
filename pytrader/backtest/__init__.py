@@ -2,12 +2,11 @@
 
 import backtrader as bt
 import os
-from model import Session
-from model.asset import Asset
-from model.ohlcv import Ohlcv
 import pandas as pd
 import pytrader as pt
-from pytrader.data import date
+from pytrader.database import Session
+from pytrader.date import date
+from pytrader.model import Asset, Ohlcv
 from sqlalchemy.sql import text
 import sys
 
