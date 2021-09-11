@@ -18,4 +18,4 @@ class Asset(Base, ModelAdmin):
     symbol = sa.Column(sa.Unicode(50))
 
     def __repr__(self):
-        return f'<Asset (id={self.id}, symbol={self.symbol})>'
+        return f'<Asset (id={self.id}, asset_class={self.asset_class} status={self.status} symbol={self.symbol})>'

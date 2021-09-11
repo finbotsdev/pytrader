@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+from datetime import datetime, timedelta
 import json
 import pandas as pd
 import pytrader.config as cfg
@@ -25,6 +26,13 @@ class AlpacaMarkets():
       "APCA-API-SECRET-KEY": self.SECRET_KEY
     }
 
+  def _granularity(self, timeframe):
+    if timeframe == '1Min':
+      return 60
+    if timeframe == '1Hour':
+      return 60*60
+    if timeframe == '1Day':
+      return 60*60*24
 
   def get(self, path, **kwargs):
       params=[]
@@ -151,25 +159,28 @@ class AlpacaMarkets():
 
   def get_bars_chunked(self, symbol, start, end, timeframe='1Min', limit=10000, page_token=None, adjustment='raw'):
     # convert string dates to datetime objects
-    fds, dstart = date(start)
-    eds, dend = date(end)
+    start_time = datetime.strptime(start, '%Y-%m-%d')
+    end_time = datetime.strptime(end, '%Y-%m-%d')
+    print(f"start_time {type(start_time)} {start_time}")
+    max_bars = limit
+    max_time_seconds = max_bars * self._granularity(timeframe)
+    delta = timedelta(seconds = max_time_seconds)
+    chunk_end = start_time + delta
 
-    # get count of days between start and end date
-    days_remaining = abs(dend-dstart).days
+    # create a list of time chunks
+    chunks = []
+    while chunk_end < end_time:
+      chunks.append(chunk_end)
+      chunk_end = (chunk_end + delta)
+    chunks.append(end_time)
 
-    # fetch bar data in week sized chunks
+    # fetch bar data in chunks
     bars = []
-    while days_remaining > 0:
-      start = days_remaining
-      end = days_remaining -7
-      days_remaining = days_remaining - 8
-
-      sds, start_time = date(f'{start} days ago')
-      eds, end_time = date(f'{end} days ago')
-
-      result = self.get_bars(symbol, end=eds, start=sds, timeframe=timeframe, limit=limit, page_token=page_token, adjustment=adjustment)
-      logger.info(f'{symbol} - {start_time} to {end_time} - {len(result)} bars returned')
+    for end_time in chunks:
+      result = self.get_bars(symbol, end=end_time.date(), start=start_time.date(), timeframe=timeframe, limit=limit, page_token=page_token, adjustment=adjustment)
+      logger.info(f'{symbol} - {start_time.date()} to {end_time.date()} - {len(result)} bars returned')
       bars.extend(result)
+      start_time = end_time
 
     return bars
 
