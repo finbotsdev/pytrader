@@ -13,7 +13,7 @@ import re
 
 
 def argparser(subparser):
-  parser = subparser.add_parser('versioon')
+  parser = subparser.add_parser('version')
 
 
 def main(args):

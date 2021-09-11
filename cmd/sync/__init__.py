@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import os
 from pytrader.log import logger
 
+from .assets import main as assets
+from .exchanges import main as exchanges
+from .etfholdings import main as etfholdings
+from .wallstreetbets import main as wallstreetbets
 
 """
   sync
@@ -19,4 +22,5 @@ def argparser(subparser):
 def main(args):
   logger.debug('pytrader assets')
   logger.debug(args)
-  os.system(f'python sync/{args.resource}.py')
+
+  eval(args.resource+'(args)')

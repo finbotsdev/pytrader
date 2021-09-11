@@ -62,6 +62,7 @@ if __name__ == '__main__':
   download_args(subparsers)
   screener_args(subparsers)
   stream_args(subparsers)
+  sync_args(subparsers)
   version_args(subparsers)
 
   args = parser.parse_args()
