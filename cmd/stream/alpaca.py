@@ -1,22 +1,25 @@
 # encoding: utf-8
 
 import pytrader as pt
-from pytrader.data.cryptowatch import CryptowatchStream
+from pytrader.data import AlpacaStream
 from pytrader.log import logger
 import traceback
 
+
 """
-c-cryptowatch-stream.py
+alpaca.py
 ---------------------
-pytrader function template
+stream data from alpaca websocket
 """
+
 
 def main(args):
-  print(args)
-
   try:
-    ws = CryptowatchStream()
-    print(ws)
+    logger.info('pytrader alpaca stream')
+    logger.debug(args)
+
+    ws = AlpacaStream()
+    ws.set_tickers(args.tickers)
     ws.run()
 
   except Exception as e:
@@ -27,7 +30,6 @@ def main(args):
 
 if __name__ == '__main__':
   parser = pt.ArgumentParser()
-  parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
   parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
   args = parser.parse_args()
 

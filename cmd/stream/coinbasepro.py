@@ -1,23 +1,24 @@
 # encoding: utf-8
 
 import pytrader as pt
-from pytrader.data.alpaca import AlpacaStream
+from pytrader.data import CoinbaseProStream
 from pytrader.log import logger
 import traceback
 
 
 """
-c-alpaca-stream.py
+coinbasepro.py
 ---------------------
-pytrader function template
+stream data from coinbasepro websocket
 """
 
-def main(args):
-  print(args)
 
+def main(args):
   try:
-    ws = AlpacaStream()
-    ws.set_tickers(args.tickers)
+    logger.info('pytrader coinbasepro stream')
+    logger.debug(args)
+
+    ws = CoinbaseProStream()
     ws.run()
 
   except Exception as e:
@@ -28,7 +29,6 @@ def main(args):
 
 if __name__ == '__main__':
   parser = pt.ArgumentParser()
-  parser.add_argument('-t', '--tickers', default=[], help="list of ticker symbols to include", nargs='+' )
   parser.add_argument("-v", "--verbose", action='store_true', help="verbose")
   args = parser.parse_args()
 

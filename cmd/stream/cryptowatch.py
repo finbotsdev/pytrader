@@ -1,25 +1,24 @@
 # encoding: utf-8
 
 import pytrader as pt
-from pytrader.data import CoinbaseProStream
+from pytrader.data import CryptowatchStream
 from pytrader.log import logger
 import traceback
-from datetime import datetime
 
 
 """
-c-coinbasepro.py
+cryptowatch.py
 ---------------------
-pytrader function template
+stream data from cryptowatch websocket
 """
 
 
 def main(args):
-  print(args)
-
   try:
-    ws = CoinbaseProStream()
-    print(ws)
+    logger.info('pytrader coinbasepro stream')
+    logger.debug(args)
+
+    ws = CryptowatchStream()
     ws.run()
 
   except Exception as e:
