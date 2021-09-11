@@ -56,13 +56,21 @@ def main(args):
   job.hour.every(6)
   job.minute.on(15)
 
-  # sync price data for yesterday at 6:20 am
+  # sync digital asset price data for yesterday at 6:20 am
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob ./pytrade download -i minute -s "1 day ago"'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade download --asset digital --interval minute --start "28 hours ago" --end "1 hour ago"'
   job = cron.new(command=cmd, comment=comment)
   job.hour.every(1)
   job.hour.every(6)
-  job.minute.on(15)
+  job.minute.on(20)
+
+  # sync us_equity price data for yesterday at 6:30 am
+  comment = f'pytrader'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade download --asset us_equity --interval minute --start "yesterday" --end "yesterday"'
+  job = cron.new(command=cmd, comment=comment)
+  job.hour.every(1)
+  job.hour.every(6)
+  job.minute.on(30)
 
   # sync redit mentions every hour
   comment = f'pytrader'
