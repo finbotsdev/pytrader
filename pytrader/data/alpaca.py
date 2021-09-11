@@ -45,7 +45,7 @@ class AlpacaMarkets():
         url = "?".join([url, "&".join(params)])
 
       s = requests.Session()
-      retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+      retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
       s.mount('https://', HTTPAdapter(max_retries=retries))
       r = s.get(url, headers=self.auth_header)
 
@@ -66,7 +66,7 @@ class AlpacaMarkets():
         url = "?".join([url, "&".join(params)])
 
       s = requests.Session()
-      retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+      retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
       s.mount('https://', HTTPAdapter(max_retries=retries))
       r = s.get(url, headers=self.auth_header)
 

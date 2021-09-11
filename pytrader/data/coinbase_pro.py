@@ -58,7 +58,7 @@ class CoinbasePro():
     auth = CoinbaseExchangeAuth()
 
     s = requests.Session()
-    retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+    retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
     s.mount('https://', HTTPAdapter(max_retries=retries))
     r = s.get(url, auth=auth)
 
@@ -169,9 +169,8 @@ class CoinbasePro():
     bars = []
     for end_time in chunks:
       result = self.get_product_candles(product_id, start=start_time, end=end_time, granularity=granularity)
-      if result:
-        logger.info(f'{product_id} - {start_time} to {end_time} - {len(result)} bars returned')
-        bars.extend(result)
+      logger.info(f'{product_id} - {start_time} to {end_time} - {len(result)} bars returned')
+      bars.extend(result)
       start_time = end_time
 
     return bars
