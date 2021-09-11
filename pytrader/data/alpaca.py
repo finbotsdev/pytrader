@@ -222,7 +222,6 @@ class AlpacaDataframe():
     df["dt"] = pd.to_datetime((df["dt"]), format='%Y-%m-%dT%H:%M:%SZ')
     df.drop(labels=['n','vw'], axis=1, inplace=True)
     # add symbol column
-    df['period'] = 'minute'
     df.sort_values(by=['dt'], inplace=True)
     df.drop_duplicates(subset='dt', inplace=True)
     return df
