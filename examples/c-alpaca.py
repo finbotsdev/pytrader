@@ -22,24 +22,28 @@ def main(args):
     api = AlpacaMarkets()
 
     logger.info('get_account')
-    print(api.get_account())
+    results = api.get_account()
 
     logger.info('get_assets')
-    print(api.get_assets())
+    results = api.get_assets()
 
     logger.info('get_calendar')
-    print(api.get_calendar(end=date('yesterday'), start=date('one week ago')))
+    results = api.get_calendar(end=date('yesterday'), start=date('one week ago'))
 
     logger.info('get_clock')
-    print(api.get_clock())
+    results = api.get_clock()
 
     logger.info('get_watchlists')
-    print(api.get_watchlists())
+    results = api.get_watchlists()
 
     logger.info('get_bars')
-    sds, dstart = date('1 month ago')
+    sds, dstart = date('2 days ago')
     eds, dend = date('yesterday')
-    print(api.get_bars_chunked('AAPL', end=eds, start=sds))
+    results = api.get_bars_chunked('AAPL', end=eds, start=sds)
+
+    for item in results:
+      print(item)
+
 
   except Exception as e:
     logger.error(e)
