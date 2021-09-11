@@ -6,7 +6,7 @@ import pytrader.config as cfg
 from pytrader.date import date
 from pytrader.log import logger
 import requests
-from requests.auth import AuthBase
+from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import time
 import websocket

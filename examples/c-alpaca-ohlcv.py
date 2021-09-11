@@ -1,12 +1,11 @@
 # encoding: utf-8
 
-import asyncio
+import os
 import pandas as pd
 import pytrader as pt
 from pytrader.data import AlpacaMarkets, AlpacaDataframe
 from pytrader.date import date
 from pytrader.log import logger
-from pytrader.model import Asset, Ohlcv
 import traceback
 
 
@@ -22,31 +21,36 @@ def main(args):
 
   try:
     api = AlpacaMarkets()
-    symbol = 'AAPL'
 
-    # convert string dates to datetime objects
-    sds, dstart = date('1 month ago')
-    eds, dend = date('yesterday')
-    bars = api.get_bars_chunked(symbol=symbol, end=eds, start=sds)
+    symbols = ['AAPL', 'MSFT','TSLA']
+    latest = 'today'
+    earliest = '1 year ago'
 
-    df = AlpacaDataframe(bars)
-    print(df)
+    for symbol in symbols:
+      datadir = f'./.data/minute'
+      datafile = f'.data/minute/{symbol}.csv'
 
-    # this is fantastically fast but fails on duplicate recores
-    # dataframe to_sql will fail if uniqueness indexes fail
-    # df.to_sql('ohlcv', engine, if_exists='append', index=False)
+      os.makedirs(datadir, exist_ok=True)
 
-    # iterate dataframe and check for duplicate rows before writing
-    # ignores duplicates but is very slow
-    # for i, row in df.iterrows():
-    #   try:
-    #     df.iloc[i:i+1].to_sql(con=engine, if_exists='append', index=False, name="ohlcv")
-    #   except Exception as e:
-    #     pass
+      sds, dstart = date(earliest)
+      eds, dend = date(latest)
+      bars = api.get_bars_chunked(symbol=symbol, end=eds, start=sds)
 
-    # possible solutions
-    # https://gist.github.com/Nikolay-Lysenko/0887f4b59dc4914cec9b236c317d06e3
-    # https://gist.github.com/luke/5697511
+      if bars:
+        df = AlpacaDataframe(bars)
+
+        # if datafile exists
+        if os.path.isfile(datafile):
+          df1 = pd.read_csv(datafile)
+          df1.reset_index()
+          df1['dt'] = pd.to_datetime(df1['dt'])
+          df = df.append(df1)
+
+        df.drop_duplicates('dt', inplace=True)
+        df.sort_values('dt', axis=0, inplace=True)
+        df.set_index('dt', inplace=True)
+        df.to_csv(datafile)
+
 
   except Exception as e:
     logger.error(e)

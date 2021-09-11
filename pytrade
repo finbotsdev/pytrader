@@ -40,6 +40,7 @@ def backtest_cmd(args):
 """
   bars
   ------
+  fetch ohlcv data from alapaca and write to database
 
 """
 def bars_cmd(args):
@@ -157,6 +158,7 @@ def crontab_cmd(_):
   download
   ------
   download historical data for assets
+  currenlty only supports downloads from yahoo finance
 """
 def download_cmd(args):
   logger.debug('pytrader download')
@@ -177,7 +179,7 @@ def download_cmd(args):
     ).all()
     tickers = [a.symbol for a in assets]
 
-  intervals = { # map patam interval to what yfinance expects
+  intervals = { # map param interval to what yfinance expects
     'minute': '1m',
     'day': '1d'
   }
