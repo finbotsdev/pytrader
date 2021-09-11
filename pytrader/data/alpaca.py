@@ -161,7 +161,6 @@ class AlpacaMarkets():
     # convert string dates to datetime objects
     start_time = datetime.strptime(start, '%Y-%m-%d')
     end_time = datetime.strptime(end, '%Y-%m-%d')
-    print(f"start_time {type(start_time)} {start_time}")
     max_bars = limit
     max_time_seconds = max_bars * self._granularity(timeframe)
     delta = timedelta(seconds = max_time_seconds)

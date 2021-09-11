@@ -47,7 +47,6 @@ def main(args):
     ).all()
 
   for asset in assets:
-    print(asset)
 
     if asset.asset_class == 'digital':
       """
