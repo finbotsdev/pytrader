@@ -145,33 +145,30 @@ class CoinbasePro():
     couple that with the start and end parameters being dates and not datetimes
     there is no way to retrieve complete historical data at minute granularity
     """
-    return self.get(f"products/{product_id}/candles", start=start, end=end, granularity=granularity)
+    return self.get(f"products/{product_id}/candles", start=start.isoformat(), end=end.isoformat(), granularity=granularity)
 
   def get_product_candles_chunked(self, product_id, start=None, end=None, granularity=60):
-    start_time = datetime.strptime(start, '%Y-%m-%d')
-    end_time = datetime.strptime(end, '%Y-%m-%d')
-
     # response can include max 300 bars
     # calculate the max timeframe we can request
     # so that request shuuld return no more than 300 bars
     max_bars = 275
     max_time_seconds = max_bars * granularity
     delta = timedelta(seconds = max_time_seconds)
-    chunk_end = start_time + delta
+    chunk_end = start + delta
 
     # create a list of time chunks
     chunks = []
-    while chunk_end < end_time:
+    while chunk_end < end:
       chunks.append(chunk_end)
       chunk_end = chunk_end + delta
-    chunks.append(end_time)
+    chunks.append(end)
 
     bars = []
-    for end_time in chunks:
-      result = self.get_product_candles(product_id, start=start_time, end=end_time, granularity=granularity)
-      logger.info(f'{product_id} - {start_time} to {end_time} - {len(result)} bars returned')
+    for end in chunks:
+      result = self.get_product_candles(product_id, start=start, end=end, granularity=granularity)
+      logger.info(f'{product_id} - {start} to {end} - {len(result)} bars returned')
       bars.extend(result)
-      start_time = end_time
+      start = end
 
     return bars
 
