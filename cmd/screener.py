@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from pytrader.log import logger
 import pytrader.screener as screener

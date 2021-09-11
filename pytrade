@@ -6,7 +6,7 @@ from cmd.backtest import argparser as backtest_args
 from cmd.bars import main as bars_cmd
 from cmd.bars import argparser as bars_args
 from cmd.crontab import main as crontab_cmd
-from cmd.crontab import argprser as crontab_args
+from cmd.crontab import argparser as crontab_args
 from cmd.download import main as download_cmd
 from cmd.download import argparser as download_args
 from cmd.screener import main as screener_cmd
