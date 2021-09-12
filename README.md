@@ -13,5 +13,7 @@
 ## 3rd party api support
 
 - [Alpaca Markets](https://alpaca.markets/)
+- [coinbase-pro](https://docs.pro.coinbase.com/)
+- [coinmarketcap](https://coinmarketcap.com/api/)
 - [cryptowatch](https://cryptowat.ch/)
 - [IEX Cloud](https://iexcloud.io/)
