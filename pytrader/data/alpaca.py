@@ -8,6 +8,7 @@ from pytrader.date import date
 from pytrader.log import logger
 import requests
 from requests.adapters import HTTPAdapter
+from requests.auth import AuthBase
 from requests.packages.urllib3.util.retry import Retry
 import time
 import websocket
@@ -17,14 +18,7 @@ class AlpacaMarkets():
   def __init__(self):
     self.BASE_URL = cfg.get('APCA_API_BASE_URL')
     self.DATA_URL = cfg.get('APCA_API_DATA_URL')
-    self.KEY_ID = cfg.get('APCA_API_KEY_ID')
-    self.SECRET_KEY = cfg.get('APCA_API_SECRET_KEY')
     self.VERSION = cfg.get('APCA_API_VERSION')
-
-    self.auth_header = {
-      "APCA-API-KEY-ID": self.KEY_ID,
-      "APCA-API-SECRET-KEY": self.SECRET_KEY
-    }
 
   def _granularity(self, timeframe):
     if timeframe == '1Min':
@@ -35,49 +29,53 @@ class AlpacaMarkets():
       return 60*60*24
 
   def get(self, path, **kwargs):
-      params=[]
-      for key, value in kwargs.items():
-        params.append(f"{key}={value}")
+    params=[]
+    for key, value in kwargs.items():
+      params.append(f"{key}={value}")
 
-      url = f"{self.BASE_URL}/{self.VERSION}/{path}"
+    url = f"{self.BASE_URL}/{self.VERSION}/{path}"
 
-      if params:
-        url = "?".join([url, "&".join(params)])
+    if params:
+      url = "?".join([url, "&".join(params)])
 
-      s = requests.Session()
-      retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
-      s.mount('https://', HTTPAdapter(max_retries=retries))
-      r = s.get(url, headers=self.auth_header)
+    auth = AlpacaMarketsAuth()
 
-      if r.ok:
-        return r.json()
-      else:
-        print(r.status_code, r.reason, url)
+    s = requests.Session()
+    retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
+    s.mount('https://', HTTPAdapter(max_retries=retries))
+    r = s.get(url, auth=auth)
+
+    if r.ok:
+      return r.json()
+    else:
+      print(r.status_code, r.reason, url)
 
   def get_data(self, path, **kwargs):
-      params=[]
-      for key, value in kwargs.items():
-        if kwargs[key]:
-          params.append(f"{key}={value}")
+    params=[]
+    for key, value in kwargs.items():
+      if kwargs[key]:
+        params.append(f"{key}={value}")
 
-      url = f"{self.DATA_URL}/{self.VERSION}/{path}"
+    url = f"{self.DATA_URL}/{self.VERSION}/{path}"
 
-      if params:
-        url = "?".join([url, "&".join(params)])
+    if params:
+      url = "?".join([url, "&".join(params)])
 
-      s = requests.Session()
-      retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
-      s.mount('https://', HTTPAdapter(max_retries=retries))
-      r = s.get(url, headers=self.auth_header)
+    auth = AlpacaMarketsAuth()
 
-      if r.ok:
-        return r.json()
-      else:
-        print(r.status_code, r.reason, url)
+    s = requests.Session()
+    retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
+    s.mount('https://', HTTPAdapter(max_retries=retries))
+    r = s.get(url, auth=auth)
+
+    if r.ok:
+      return r.json()
+    else:
+      print(r.status_code, r.reason, url)
 
   # https://alpaca.markets/docs/api-documentation/api-v2/account/
   def get_account(self):
-      return self.get(f"account")
+    return self.get(f"account")
 
 
   # https://alpaca.markets/docs/api-documentation/api-v2/account-configuration/
@@ -92,7 +90,7 @@ class AlpacaMarkets():
 
   # https://alpaca.markets/docs/api-documentation/api-v2/assets/
   def get_assets(self):
-      return self.get(f"assets")
+    return self.get(f"assets")
   # GET/v2/assets/:id
   # GET/v2/assets/{symbol}
 
@@ -214,6 +212,22 @@ class AlpacaMarkets():
     }
     return exchanges[symbol]
 
+
+class AlpacaMarketsAuth(AuthBase):
+
+    def __init__(self):
+      self.KEY_ID = cfg.get('APCA_API_KEY_ID')
+      self.SECRET_KEY = cfg.get('APCA_API_SECRET_KEY')
+
+    def __call__(self, request):
+        request.headers.update({
+          "APCA-API-KEY-ID": self.KEY_ID,
+          "APCA-API-SECRET-KEY": self.SECRET_KEY,
+          'Content-Type': 'application/json'
+        })
+        return request
+
+
 class AlpacaDataframe():
   def __new__(cls, bars):
     df = pd.DataFrame(bars)
@@ -225,12 +239,16 @@ class AlpacaDataframe():
     df.drop_duplicates(subset='dt', inplace=True)
     return df
 
+
 class AlpacaStream():
   def __init__(self):
     self.DATA_URL = cfg.get('APCA_API_DATA_URL')
     self.KEY_ID = cfg.get('APCA_API_KEY_ID')
     self.SECRET_KEY = cfg.get('APCA_API_SECRET_KEY')
     self.VERSION = cfg.get('APCA_API_VERSION')
+
+  def set_on_update(self, func):
+    self.on_update = func
 
   def set_tickers(self, tickers: list):
     self.TICKERS = tickers
@@ -261,6 +279,10 @@ class AlpacaStream():
 
   def on_message(self, ws, message):
     logger.info(message)
+
+    self.on_update(message)
+
+
 
   def run(self):
     data_domain = self.DATA_URL.replace("https://","")

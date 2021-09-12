@@ -19,6 +19,10 @@ def main(args):
   print(args)
 
   try:
+
+    sds, dstart = date('2 days ago')
+    eds, dend = date('yesterday')
+
     api = AlpacaMarkets()
 
     logger.info('get_account')
@@ -28,7 +32,7 @@ def main(args):
     results = api.get_assets()
 
     logger.info('get_calendar')
-    results = api.get_calendar(end=date('yesterday'), start=date('one week ago'))
+    results = api.get_calendar(end=eds, start=sds)
 
     logger.info('get_clock')
     results = api.get_clock()
@@ -37,8 +41,6 @@ def main(args):
     results = api.get_watchlists()
 
     logger.info('get_bars')
-    sds, dstart = date('2 days ago')
-    eds, dend = date('yesterday')
     results = api.get_bars_chunked('AAPL', end=eds, start=sds)
 
     for item in results:
