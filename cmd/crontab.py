@@ -58,7 +58,7 @@ def main(args):
 
   # sync digital asset price data for yesterday at 6:20 am
   comment = f'pytrader'
-  cmd = f'cd {cwd}; ./cronjob ./pytrade download --asset digital --interval minute --start "28 hours ago" --end "1 hour ago"'
+  cmd = f'cd {cwd}; ./cronjob ./pytrade download --asset digital --interval minute --start "28 hours ago" --end "1 minute ago"'
   job = cron.new(command=cmd, comment=comment)
   job.hour.every(1)
   job.hour.every(6)
