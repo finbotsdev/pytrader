@@ -20,21 +20,21 @@ record observed cashtags
 """
 
 
-api = PushshiftAPI()
-session = Session()
-
-
 def main(args):
   print(args)
 
   try:
+    api = PushshiftAPI()
+    session = Session()
+
     start_time = int(datetime.combine(date.today(), time()).timestamp())
 
     logger.info('search_submissions')
-    submissions = api.search_submissions(after=start_time,
-                                        subreddit='wallstreetbets',
-                                        filter=['url','author', 'title', 'subreddit'],
-                                        limit=50)
+    submissions = api.search_submissions(
+      after=start_time,
+      subreddit='wallstreetbets',
+      filter=['url','author', 'title', 'subreddit'],
+      limit=50)
 
     words = [] # list to hold submission title words
     for submission in submissions:
