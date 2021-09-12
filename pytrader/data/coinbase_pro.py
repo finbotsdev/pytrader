@@ -16,28 +16,6 @@ import time
 import traceback
 import websocket
 
-class CoinbaseExchangeAuth(AuthBase):
-
-    def __init__(self):
-        self.api_key = cfg.get('COINBASEPRO_API_KEY_ID')
-        self.secret_key = cfg.get('COINBASEPRO_API_SECRET_KEY')
-        self.passphrase = cfg.get('COINBASEPRO_API_PASSWORD')
-
-    def __call__(self, request):
-        timestamp = str(time.time())
-        message = timestamp + request.method + request.path_url + (request.body or '')
-        hmac_key = base64.b64decode(self.secret_key)
-        signature = hmac.new(hmac_key, message.encode('utf-8'), hashlib.sha256)
-        signature_b64 = base64.b64encode(signature.digest())
-
-        request.headers.update({
-            'CB-ACCESS-SIGN': signature_b64,
-            'CB-ACCESS-TIMESTAMP': timestamp,
-            'CB-ACCESS-KEY': self.api_key,
-            'CB-ACCESS-PASSPHRASE': self.passphrase,
-            'Content-Type': 'application/json'
-        })
-        return request
 
 class CoinbasePro():
 
@@ -55,7 +33,7 @@ class CoinbasePro():
     if params:
       url = "?".join([url, "&".join(params)])
 
-    auth = CoinbaseExchangeAuth()
+    auth = CoinbaseProAuth()
 
     s = requests.Session()
     retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
@@ -210,6 +188,31 @@ class CoinbasePro():
   # GET /withdrawals/fee-estimate
   # POST /withdrawals/payment-method
 
+
+class CoinbaseProAuth(AuthBase):
+
+    def __init__(self):
+        self.api_key = cfg.get('COINBASEPRO_API_KEY_ID')
+        self.secret_key = cfg.get('COINBASEPRO_API_SECRET_KEY')
+        self.passphrase = cfg.get('COINBASEPRO_API_PASSWORD')
+
+    def __call__(self, request):
+        timestamp = str(time.time())
+        message = timestamp + request.method + request.path_url + (request.body or '')
+        hmac_key = base64.b64decode(self.secret_key)
+        signature = hmac.new(hmac_key, message.encode('utf-8'), hashlib.sha256)
+        signature_b64 = base64.b64encode(signature.digest())
+
+        request.headers.update({
+            'CB-ACCESS-SIGN': signature_b64,
+            'CB-ACCESS-TIMESTAMP': timestamp,
+            'CB-ACCESS-KEY': self.api_key,
+            'CB-ACCESS-PASSPHRASE': self.passphrase,
+            'Content-Type': 'application/json'
+        })
+        return request
+
+
 class CoinbaseProDataFrame():
   def __new__(cls, bars):
     df = pd.DataFrame(bars)
@@ -219,6 +222,7 @@ class CoinbaseProDataFrame():
     df.drop_duplicates(subset='dt', inplace=True)
     df.reset_index(drop=True, inplace=True)
     return df
+
 
 class CoinbaseProStream():
   def __init__(self):
