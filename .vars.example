@@ -18,6 +18,10 @@ export COINBASEPRO_API_PASSWORD=xxxxxxxxxx
 export COINBASEPRO_API_URL=https://api.pro.coinbase.com
 export COINBASEPRO_API_STREAM=wss://ws-feed.pro.coinbase.com
 
+# coinmarketcap
+export CMC_PRO_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export CMC_PRO_API_URL=https://pro-api.coinmarketcap.com
+
 # cryptowatch
 export CRYPTOWATCH_API_KEY_ID=xxxxxxxxxxxxxxxxx
 export CRYPTOWATCH_API_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
