@@ -244,6 +244,9 @@ class CoinbaseProStream():
       'CB-ACCESS-PASSPHRASE': self.PASSWORD
     }
 
+  def set_on_update(self, func):
+    self.on_update = func
+
   def subscribe(self, ws):
     params = {
       "type": "subscribe",
@@ -308,8 +311,9 @@ class CoinbaseProStream():
             "volume": float(size) + prodbars[dt]['volume']
           }
         else:
+          print(f'{self.message_count} total messages {self.messages_minute} last minute ------------ ')
           # start new dt dict for product/minute
-          self.message_minute = 0
+          self.messages_minute = 0
           prodbars[dt] = {
             "open": float(price),
             "high": float(price),
@@ -318,10 +322,10 @@ class CoinbaseProStream():
             "volume": float(size)
           }
 
-        print(f'{self.messages_minute} ------------------------------------ {self.message_count}')
-        for product in self.bars:
-          for dt in self.bars[product]:
-            print(f'{dt} {product} {self.bars[product][dt]}')
+          if len(list(prodbars.keys())) > 1:
+            del self.bars[product][list(prodbars.keys())[0]]
+
+          self.on_update(product, prodbars)
 
       """
       subscribe to the 'matches' channel, and create a candle on your own from the data.
